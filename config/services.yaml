@@ -5,9 +5,19 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     locale: 'en'
+
     edoc_ws_url: '%env(EDOC_WS_URL)%'
     edoc_ws_username: '%env(EDOC_WS_USERNAME)%'
     edoc_ws_password: '%env(EDOC_WS_PASSWORD)%'
+    edoc_user_identifier: '%env(EDOC_USER_IDENTIFIER)%'
+    edoc_project_id: '%env(EDOC_PROJECT_ID)%'
+
+    sharefile_hostname: '%env(SHAREFILE_HOSTNAME)%'
+    sharefile_client_id: '%env(SHAREFILE_CLIENT_ID)%'
+    sharefile_secret: '%env(SHAREFILE_SECRET)%'
+    sharefile_username: '%env(SHAREFILE_USERNAME)%'
+    sharefile_password: '%env(SHAREFILE_PASSWORD)%'
+    sharefile_root_id: '%env(SHAREFILE_ROOT_ID)%'
 
 services:
     # default configuration for services in *this* file
