@@ -10,11 +10,10 @@
 
 namespace App\Command\Edoc;
 
+use App\Command\Command;
 use App\Service\EdocService;
 use ItkDev\Edoc\Util\ItemListType;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\RuntimeException;
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -39,6 +38,8 @@ class ItemListCommand extends Command
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
+        parent::execute($input, $output);
+
         $type = $input->getArgument('type');
         if (!\in_array($type, ItemListType::getValues(), true)) {
             throw new RuntimeException('Invalid item list type: '.$type);
@@ -46,11 +47,6 @@ class ItemListCommand extends Command
 
         $items = $this->edoc->getItemList($type);
 
-        $table = new Table($output);
-        foreach ($items as $item) {
-            $table->setHeaders(array_keys($item));
-            $table->addRow($item);
-        }
-        $table->render();
+        $this->writeTable($items);
     }
 }

@@ -10,10 +10,9 @@
 
 namespace App\Command\Edoc;
 
+use App\Command\Command;
 use App\Service\EdocService;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\FormatterHelper;
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -40,6 +39,8 @@ class CasesCommand extends Command
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
+        parent::execute($input, $output);
+
         $cmd = $input->getArgument('cmd');
         $args = $input->getArgument('args');
 
@@ -61,11 +62,6 @@ class CasesCommand extends Command
     {
         $cases = $this->edoc->getCases();
 
-        $table = new Table($output);
-        $table->setHeaders(['CaseFileIdentifier', 'TitleText']);
-        foreach ($cases as $case) {
-            $table->addRow([$case['CaseFileIdentifier'], $case['TitleText']]);
-        }
-        $table->render();
+        $this->writeTable($cases, true);
     }
 }

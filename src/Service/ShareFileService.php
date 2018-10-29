@@ -10,6 +10,7 @@
 
 namespace App\Service;
 
+use App\Entity\ShareFile\Item;
 use Kapersoft\ShareFile\Client;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
@@ -37,34 +38,45 @@ class ShareFileService
             $responses = $this->getResponses($hearing, $changedAfter);
             foreach ($responses as &$response) {
                 $files = $this->getFiles($response, $changedAfter);
-                $response['_files'] = $files;
+                $response->setChildren($files);
             }
-            $hearing['_responses'] = $responses;
+            $hearing->setChildren($responses);
         }
 
         return $hearings;
     }
 
+    /**
+     * @param null|\DateTime $changedAfter
+     *
+     * @return Item[]
+     */
     public function getHearings(\DateTime $changedAfter = null)
     {
         $itemId = $this->configuration['sharefile_root_id'];
-        $hearings = $this->getFolders($itemId, $changedAfter);
-
-        return array_filter($hearings ?? [], function ($item) use ($changedAfter) {
+        $folders = $this->getFolders($itemId, $changedAfter);
+        $hearings = array_filter($folders ?? [], function ($item) use ($changedAfter) {
             if ($changedAfter && isset($item['ProgenyEditDate'])
-                    && new \DateTime($item['ProgenyEditDate']) < $changedAfter) {
+                && new \DateTime($item['ProgenyEditDate']) < $changedAfter) {
                 return false;
             }
 
             return $this->isHearing($item);
         });
+
+        return $this->construct(Item::class, $hearings);
     }
 
-    public function getResponses(array $hearing, \DateTime $changedAfter = null)
+    /**
+     * @param Item           $hearing
+     * @param null|\DateTime $changedAfter
+     *
+     * @return Item[]
+     */
+    public function getResponses(Item $hearing, \DateTime $changedAfter = null)
     {
-        $responses = $this->getFolders($hearing, $changedAfter);
-
-        return array_filter($responses ?? [], function ($item) use ($changedAfter) {
+        $folders = $this->getFolders($hearing, $changedAfter);
+        $responses = array_filter($folders ?? [], function ($item) use ($changedAfter) {
             if ($changedAfter && isset($item['ProgenyEditDate'])
                     && new \DateTime($item['ProgenyEditDate']) < $changedAfter) {
                 return false;
@@ -72,21 +84,28 @@ class ShareFileService
 
             return $this->isHearingResponse($item);
         });
+
+        return $this->construct(Item::class, $responses);
     }
 
+    /**
+     * @param $item
+     *
+     * @return Item
+     */
     public function getItem($item)
     {
         $itemId = $this->getItemId($item);
+        $item = $this->client()->getItemById($itemId);
 
-        return $this->client()->getItemById($itemId);
+        return new Item($item);
     }
 
     public function getFiles($item, \DateTime $changedAfter = null)
     {
         $itemId = $this->getItemId($item);
-        $files = $this->getChildren($itemId, self::SHAREFILE_FILE, $changedAfter);
-
-        return array_filter($files ?? [], function ($item) use ($changedAfter) {
+        $children = $this->getChildren($itemId, self::SHAREFILE_FILE, $changedAfter);
+        $files = array_filter($children ?? [], function ($item) use ($changedAfter) {
             if ($changedAfter && isset($item['CreationDate'])
                 && new \DateTime($item['CreationDate']) < $changedAfter) {
                 return false;
@@ -94,6 +113,8 @@ class ShareFileService
 
             return true;
         });
+
+        return $this->construct(Item::class, $files);
     }
 
     public function getFolders($item, \DateTime $changedAfter = null)
@@ -103,16 +124,16 @@ class ShareFileService
         return $this->getChildren($itemId, self::SHAREFILE_FOLDER, $changedAfter);
     }
 
-    public function downloadFile(array $file)
+    public function downloadFile($item)
     {
-        $itemId = $this->getItemId($file);
+        $itemId = $this->getItemId($item);
 
         return $this->client()->getItemContents($itemId);
     }
 
     private function getItemId($item)
     {
-        return \is_array($item) ? $item['Id'] : $item;
+        return $item instanceof Item ? $item->id : $item;
     }
 
     private function getChildren(string $itemId, string $type, \DateTime $changedAfter = null)
@@ -224,5 +245,12 @@ class ShareFileService
     private function isHearingResponse(array $item)
     {
         return preg_match('/^HS[0-9]+$/', $item['Name']);
+    }
+
+    private function construct($class, array $items)
+    {
+        return array_map(function (array $data) use ($class) {
+            return new $class($data);
+        }, $items);
     }
 }

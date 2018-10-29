@@ -93,8 +93,8 @@
     },
     "repositories": {
         "itk-dev/edoc-api": {
-            "type": "path",
-            "url": "packages/itk-dev/edoc-api"
+            "type": "git",
+            "url": "https://github.com/itk-dev/edoc-api"
         },
         "kapersoft/sharefile-api": {
             "type": "git",

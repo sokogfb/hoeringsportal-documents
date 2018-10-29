@@ -120,7 +120,7 @@ class EdocService
      *
      * @return Document
      */
-    public function createResponse(CaseFile $hearing, string $name, array $data = [])
+    public function createResponse(CaseFile $hearing, string $name, array $data)
     {
         // Add default (and required) values.
         $data += [
@@ -130,7 +130,12 @@ class EdocService
                     'DocumentCategoryCode' => '',
         ];
 
-        return $this->edoc()->createDocument($hearing, $data);
+        return $this->edoc()->createDocumentAndDocumentVersion($hearing, $data);
+    }
+
+    public function updateResponse(Document $response, array $data)
+    {
+        return $this->edoc()->createDocumentVersion($response, $data);
     }
 
     /**
