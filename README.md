@@ -1,5 +1,11 @@
 # ShareFile2eDoc
 
+## Installation
+
+```sh
+composer install --no-dev --optimize-autoloader
+bin/console doctrine:migrations:migrate --no-interaction
+```
 
 
 ```sh

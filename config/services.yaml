@@ -19,6 +19,9 @@ parameters:
     sharefile_password: '%env(SHAREFILE_PASSWORD)%'
     sharefile_root_id: '%env(SHAREFILE_ROOT_ID)%'
 
+    deskpro_url: '%env(DESKPRO_URL)%'
+    deskpro_api_code_key: '%env(DESKPRO_API_CODE_KEY)%'
+
 services:
     # default configuration for services in *this* file
     _defaults:

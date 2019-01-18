@@ -239,7 +239,7 @@ class ShareFileService
 
     private function isHearing(array $item)
     {
-        return preg_match('/^H[0-9]+$/', $item['Name']);
+        return preg_match('/^H([a-z-]+)?[0-9]+$/i', $item['Name']);
     }
 
     private function isHearingResponse(array $item)
