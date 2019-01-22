@@ -10,21 +10,51 @@
 
 namespace App\Command;
 
+use App\Entity\Archiver;
+use App\Exception\RuntimeException;
+use App\Repository\ArchiverRepository;
 use Symfony\Component\Console\Command\Command as BaseCommand;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class Command extends BaseCommand
 {
+    /** @var InputInterface */
     protected $input;
+
+    /** @var OutputInterface */
     protected $output;
+
+    /** @var ArchiverRepository */
+    protected $archiverRepository;
+
+    /** @var Archiver */
+    protected $archiver;
+
+    public function setArchiverRepository(ArchiverRepository $archiverRepository)
+    {
+        $this->archiverRepository = $archiverRepository;
+    }
+
+    protected function configure()
+    {
+        $this->addArgument('archiver', InputArgument::REQUIRED, 'Archiver to run (name or id)');
+    }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->input = $input;
         $this->output = $output;
+
+        $archiverId = $input->getArgument('archiver');
+        $this->archiver = $this->archiverRepository->findOneByNameOrId($archiverId);
+
+        if (null === $this->archiver) {
+            throw new RuntimeException('Invalid archiver: '.$archiverId);
+        }
     }
 
     protected function writeTable($data, $vertical = false)
@@ -47,7 +77,7 @@ abstract class Command extends BaseCommand
         foreach ($data as $item) {
             // Clean up item.
             $item = array_map(function ($value) {
-                return \json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             }, json_decode(json_encode($item ?? []), true));
 
             if ($vertical) {

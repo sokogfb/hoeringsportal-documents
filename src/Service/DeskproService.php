@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of hoeringsportal-sync-files.
+ *
+ * (c) 2018 ITK Development
+ *
+ * This source file is subject to the MIT license.
+ */
+
 namespace App\Service;
 
 use Deskpro\API\DeskproClient;
@@ -8,7 +16,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class DeskproService
 {
-    /** @var  DeskproClient */
+    /** @var DeskproClient */
     private $client;
 
     /** @var array */
@@ -22,7 +30,8 @@ class DeskproService
         ];
     }
 
-    public function getReplyData($replyId) {
+    public function getReplyData($replyId)
+    {
         $response = $this->client()->get('/ticket_custom_fields/{id}', ['id' => $replyId]);
 
         return $response->getData();
@@ -31,8 +40,9 @@ class DeskproService
     /**
      * Get a Deskpro client.
      */
-    private function client() {
-        if (NULL === $this->client) {
+    private function client()
+    {
+        if (null === $this->client) {
             // https://github.com/deskpro/deskpro-api-client-php
             $client = new Client(['connect_timeout' => 2]);
             $this->client = new DeskproClient($this->config['deskpro_url'], $client);
@@ -42,5 +52,4 @@ class DeskproService
 
         return $this->client;
     }
-
 }

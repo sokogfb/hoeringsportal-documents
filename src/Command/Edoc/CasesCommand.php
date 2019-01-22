@@ -28,21 +28,13 @@ class CasesCommand extends Command
         $this->edoc = $edoc;
     }
 
-    public function configure()
-    {
-        $this->setName('app:edoc:cases')
-            ->addArgument('cmd', InputArgument::REQUIRED, 'The command')
-            ->addArgument('args', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, 'The command arguments')
-            ->setHelp('Usage: %command.name% -- cmd [arguments...]
-        ');
-    }
-
     public function execute(InputInterface $input, OutputInterface $output)
     {
         parent::execute($input, $output);
 
         $cmd = $input->getArgument('cmd');
         $args = $input->getArgument('args');
+        $this->edoc->setArchiver($this->archiver);
 
         if (method_exists($this, $cmd)) {
             $this->{$cmd}($output, ...$args);
@@ -56,6 +48,16 @@ class CasesCommand extends Command
                 $this->getProcessedHelp(),
             ]);
         }
+    }
+
+    protected function configure()
+    {
+        parent::configure();
+        $this->setName('app:edoc:cases')
+            ->addArgument('cmd', InputArgument::REQUIRED, 'The command')
+            ->addArgument('args', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, 'The command arguments')
+            ->setHelp('Usage: %command.name% -- cmd [arguments...]
+        ');
     }
 
     private function list(OutputInterface $output)

@@ -8,7 +8,7 @@
  * This source file is subject to the MIT license.
  */
 
-namespace App\Entity\ShareFile;
+namespace App\ShareFile;
 
 class Item extends Entity
 {

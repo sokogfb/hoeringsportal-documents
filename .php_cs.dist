@@ -44,6 +44,10 @@ return PhpCsFixer\Config::create()
         'single_line_comment_style' => true,
         'strict_comparison' => true,
         'strict_param' => true,
+        'braces' => true,
+        'indentation_type' => true,
+        'method_chaining_indentation' => true,
+        'array_indentation' => true,
     ])
     ->setFinder($finder)
 ;

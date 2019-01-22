@@ -22,6 +22,8 @@ parameters:
     deskpro_url: '%env(DESKPRO_URL)%'
     deskpro_api_code_key: '%env(DESKPRO_API_CODE_KEY)%'
 
+    mailer_user: 'info@sharefile2edoc.example.com'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -42,3 +44,16 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Inject the archiver repository into all commands.
+    App\Command\Edoc\CasesCommand:
+        calls:
+            - method: setArchiverRepository
+              arguments:
+                  - '@App\Repository\ArchiverRepository'
+
+    App\Command\ShareFile2eDoc\ArchiveCommand:
+        calls:
+            - method: setArchiverRepository
+              arguments:
+                  - '@App\Repository\ArchiverRepository'

@@ -62,6 +62,26 @@ class SyncCommand extends Command
         }
 
         $shareFileData = $this->shareFile->getUpdatedFiles($date);
+
+        $this->shareFile->dump($shareFileData, $output);
+        header('Content-type: text/plain');
+        echo var_export(null, true);
+        die(__FILE__.':'.__LINE__.':'.__METHOD__);
+
+        foreach ($shareFileData as $item) {
+            header('Content-type: text/plain');
+            echo var_export([
+                $item->id,
+                $item->name,
+                $item->progenyEditDate,
+                $this->shareFile->getMetadata($item),
+            ], true);
+            die(__FILE__.':'.__LINE__.':'.__METHOD__);
+        }
+        header('Content-type: text/plain');
+        echo var_export(\count($shareFileData), true);
+        die(__FILE__.':'.__LINE__.':'.__METHOD__);
+
         foreach ($shareFileData as $shareFileHearing) {
             $edocHearing = $this->edoc->getHearing($shareFileHearing['Name'], true);
             if (null === $edocHearing) {

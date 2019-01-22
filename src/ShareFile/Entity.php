@@ -8,7 +8,7 @@
  * This source file is subject to the MIT license.
  */
 
-namespace App\Entity\ShareFile;
+namespace App\ShareFile;
 
 abstract class Entity implements \ArrayAccess, \JsonSerializable
 {
@@ -55,6 +55,11 @@ abstract class Entity implements \ArrayAccess, \JsonSerializable
     }
 
     public function jsonSerialize()
+    {
+        return $this->data;
+    }
+
+    public function getData()
     {
         return $this->data;
     }

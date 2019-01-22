@@ -1,10 +1,18 @@
 <?php
 
+/*
+ * This file is part of hoeringsportal-sync-files.
+ *
+ * (c) 2018 ITK Development
+ *
+ * This source file is subject to the MIT license.
+ */
+
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
-use ApiPlatform\Core\Annotation\ApiResource;
 
 /**
  * @ApiResource(
@@ -43,6 +51,17 @@ class EDocLogEntry
      * @ORM\Column(type="json")
      */
     private $data = [];
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Archiver", inversedBy="eDocLogEntries")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $archiver;
+
+    public function __toString()
+    {
+        return self::class;
+    }
 
     public function getId(): ?int
     {
@@ -93,6 +112,18 @@ class EDocLogEntry
     public function setData(array $data): self
     {
         $this->data = $data;
+
+        return $this;
+    }
+
+    public function getArchiver(): ?Archiver
+    {
+        return $this->archiver;
+    }
+
+    public function setArchiver(?Archiver $archiver): self
+    {
+        $this->archiver = $archiver;
 
         return $this;
     }

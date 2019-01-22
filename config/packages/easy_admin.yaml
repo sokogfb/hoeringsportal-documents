@@ -1,0 +1,105 @@
+easy_admin:
+    site_name: 'ShareFile2eDoc'
+
+    design:
+        assets:
+            css:
+                - 'bundles/easyadmin/app.css'
+                - 'bundles/easyadminextension/stylesheet/full-width.css'
+                - 'bundles/easyadmin/bootstrap-all.css'
+            js:
+                # By default, EasyAdminBundle embeds a limited version of Bootstrap JS.
+                # For collapsible form filters to work, a full version should be added:
+                - 'bundles/easyadmin/bootstrap-all.js'
+
+        menu:
+            - Archiver
+            # - User
+            - { label: 'eDoc' }
+            - EdocCaseFile
+            - EdocDocument
+
+    list:
+        actions: ['show']
+
+    entities:
+        Archiver:
+            class: App\Entity\Archiver
+            disabled_actions: ['delete']
+
+            list:
+                fields:
+                    - property: name
+                    - property: enabled
+                      type: boolean
+                    - property: lastRunAt
+
+            form:
+                fields:
+                    - property: name
+                    - property: enabled
+                    - property: configuration
+                      type: App\Form\Type\YamlType
+                      type_options:
+                          schema: '%kernel.project_dir%/config/schema/archiver.configuration.schema.yaml'
+                          attr:
+                              rows: 20
+                              cols: 80
+                    - property: lastRunAt
+
+            show:
+                fields:
+                    - property: name
+                    - property: enabled
+                    - property: lastRunAt
+                    - property: configuration
+
+        User:
+            class: App\Entity\User
+
+        EDocLogEntry:
+            class: App\Entity\EDocLogEntry
+            disabled_actions: ['new', 'edit', 'delete']
+            actions: ['show']
+
+            list:
+                form_filters:
+                    # - archiver
+
+                fields:
+                    - property: createdAt
+                    - property: archiver
+                    - property: eDocCaseId
+                    - property: hearingId
+                    - property: replyId
+
+        EdocCaseFile:
+            label: CaseFile
+            class: App\Entity\EDoc\CaseFile
+            disabled_actions: ['new', 'edit', 'delete']
+
+            list:
+                form_filters:
+                    # - archiver
+
+                fields:
+                    - property: archiver
+                    - property: caseFileIdentifier
+                    - property: shareFileItemId
+                    - property: updatedAt
+                    - property: createdAt
+
+        EdocDocument:
+            label: Document
+            class: App\Entity\EDoc\Document
+            disabled_actions: ['new', 'edit', 'delete']
+
+            list:
+                form_filters:
+                    # - archiver
+
+                fields:
+                    - property: archiver
+                    - property: documentIdentifier
+                    - property: updatedAt
+                    - property: createdAt

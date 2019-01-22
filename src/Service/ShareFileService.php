@@ -10,27 +10,46 @@
 
 namespace App\Service;
 
-use App\Entity\ShareFile\Item;
+use App\Entity\Archiver;
+use App\ShareFile\Item;
 use Kapersoft\ShareFile\Client;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ShareFileService
 {
     const SHAREFILE_FOLDER = 'ShareFile.Api.Models.Folder';
     const SHAREFILE_FILE = 'ShareFile.Api.Models.File';
+
+    /** @var Archiver */
+    private $archiver;
+
     /** @var array */
     private $configuration;
 
     /** @var Client */
     private $client;
 
-    public function __construct(ParameterBagInterface $parameters)
+    public function setArchiver(Archiver $archiver)
     {
-        $this->configuration = array_filter($parameters->all(), function ($key) {
-            return preg_match('/^sharefile_/', $key);
-        }, ARRAY_FILTER_USE_KEY);
+        $this->archiver = $archiver;
+        $this->configuration = $archiver->getConfigurationValue('sharefile', []);
+        $this->validateConfiguration();
     }
 
+    /**
+     * Check that we can connect to ShareFile.
+     */
+    public function connect()
+    {
+        $this->client()->getItemById($this->configuration['root_id']);
+    }
+
+    /**
+     * @param null|\DateTime $changedAfter
+     *
+     * @return Item[]
+     */
     public function getUpdatedFiles(\DateTime $changedAfter)
     {
         $hearings = $this->getHearings($changedAfter);
@@ -53,7 +72,7 @@ class ShareFileService
      */
     public function getHearings(\DateTime $changedAfter = null)
     {
-        $itemId = $this->configuration['sharefile_root_id'];
+        $itemId = $this->configuration['root_id'];
         $folders = $this->getFolders($itemId, $changedAfter);
         $hearings = array_filter($folders ?? [], function ($item) use ($changedAfter) {
             if ($changedAfter && isset($item['ProgenyEditDate'])
@@ -101,6 +120,63 @@ class ShareFileService
         return new Item($item);
     }
 
+    /**
+     * Get metadata list.
+     *
+     * @param $item
+     * @param null|array $names
+     *
+     * @return array
+     */
+    public function getMetadata($item, array $names = null)
+    {
+        $itemId = $this->getItemId($item);
+        $metadata = $this->client()->getItemMetadataList($itemId);
+
+        if (null !== $names) {
+            $metadata['value'] = array_filter($metadata['value'], function ($item) use ($names) {
+                return isset($item['Name']) && \in_array($item['Name'], $names, true);
+            });
+        }
+
+        $result = [];
+        foreach ($metadata['value'] as $metadatum) {
+            $result[$metadatum['Name']] = $metadatum;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get all metadata values.
+     *
+     * @param $item
+     * @param array $names
+     *
+     * @return array
+     */
+    public function getMetadataValues($item, array $names)
+    {
+        $metadata = $this->getMetadata($item, $names);
+
+        return array_map(function ($metadatum) {
+            return json_decode($metadatum['Value'], true);
+        }, $metadata);
+    }
+
+    /**
+     * Get a single metadata value.
+     *
+     * @param $item
+     * @param string $name
+     */
+    public function getMetadataValue($item, string $name)
+    {
+        $metadata = $this->getMetadataValues($item, [$name]);
+
+        return $metadata[$name] ?? null;
+    }
+
     public function getFiles($item, \DateTime $changedAfter = null)
     {
         $itemId = $this->getItemId($item);
@@ -131,6 +207,49 @@ class ShareFileService
         return $this->client()->getItemContents($itemId);
     }
 
+    /**
+     * @param Item[]          $hearings
+     * @param OutputInterface $output
+     */
+    public function dump(array $hearings, OutputInterface $output)
+    {
+        $table = new Table($output);
+
+        foreach ($hearings as $hearing) {
+            $table->addRow([
+                $hearing->name,
+                $hearing->id,
+                $hearing->progenyEditDate,
+            ]);
+            foreach ($hearing->getChildren() as $reply) {
+                $table->addRow([
+                    ' '.$reply->name,
+                    $reply->id,
+                    $reply->progenyEditDate,
+                    json_encode($this->getMetadata($reply), JSON_PRETTY_PRINT),
+                ]);
+                foreach ($reply->getChildren() as $file) {
+                    $table->addRow([
+                        '  '.$file->name,
+                        $file->id,
+                    ]);
+                }
+            }
+        }
+
+        $table->render();
+    }
+
+    private function validateConfiguration()
+    {
+        $requiredFields = ['hostname', 'client_id', 'secret', 'username', 'password', 'root_id'];
+        foreach ($requiredFields as $field) {
+            if (!isset($this->configuration[$field])) {
+                throw new \RuntimeException('Configuration value "'.$field.'" missing.');
+            }
+        }
+    }
+
     private function getItemId($item)
     {
         return $item instanceof Item ? $item->id : $item;
@@ -139,20 +258,20 @@ class ShareFileService
     private function getChildren(string $itemId, string $type, \DateTime $changedAfter = null)
     {
         $query = [
-//            '$select' => implode(',', [
-//                'Id',
-//                'CreationDate',
-//                'Name',
-//// https://community.sharefilesupport.com/citrixsharefile/topics/using-api-what-way-can-clients-listen-for-new-files?topic-reply-list[settings][filter_by]=all&topic-reply-list[settings][reply_id]=17731261#reply_17731261
-//                'ProgenyEditDate',
-//            ]),
+            //            '$select' => implode(',', [
+            //                'Id',
+            //                'CreationDate',
+            //                'Name',
+            //// https://community.sharefilesupport.com/citrixsharefile/topics/using-api-what-way-can-clients-listen-for-new-files?topic-reply-list[settings][filter_by]=all&topic-reply-list[settings][reply_id]=17731261#reply_17731261
+            //                'ProgenyEditDate',
+            //            ]),
 
-//            '$orderby' => 'ProgenyEditDate asc',
+            //            '$orderby' => 'ProgenyEditDate asc',
 
-//            '$expand' => implode(',', [
-//                'Children',
-//                'Children/Children',
-//            ]),
+            //            '$expand' => implode(',', [
+            //                'Children',
+            //                'Children/Children',
+            //            ]),
             '$filter' => 'isof(\''.$type.'\')',
         ];
 
@@ -222,15 +341,18 @@ class ShareFileService
 //        return $result['Children'] ?? null;
 //    }
 
+    /**
+     * @return Client
+     */
     private function client()
     {
         if (null === $this->client) {
             $this->client = new Client(
-                $this->configuration['sharefile_hostname'],
-                $this->configuration['sharefile_client_id'],
-                $this->configuration['sharefile_secret'],
-                $this->configuration['sharefile_username'],
-                $this->configuration['sharefile_password']
+                $this->configuration['hostname'],
+                $this->configuration['client_id'],
+                $this->configuration['secret'],
+                $this->configuration['username'],
+                $this->configuration['password']
             );
         }
 
