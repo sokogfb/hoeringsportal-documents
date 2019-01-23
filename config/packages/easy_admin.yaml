@@ -19,6 +19,9 @@ easy_admin:
             - EdocCaseFile
             - EdocDocument
 
+    formats:
+        datetime: 'd/m/Y H:i:s'
+
     list:
         actions: ['show']
 

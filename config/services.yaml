@@ -4,6 +4,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
+    env(VIEW_TIMEZONE): 'UTC'
+
     locale: 'en'
 
     edoc_ws_url: '%env(EDOC_WS_URL)%'
@@ -23,6 +25,8 @@ parameters:
     deskpro_api_code_key: '%env(DESKPRO_API_CODE_KEY)%'
 
     mailer_user: 'info@sharefile2edoc.example.com'
+
+    view_timezone: '%env(VIEW_TIMEZONE)%'
 
 services:
     # default configuration for services in *this* file
