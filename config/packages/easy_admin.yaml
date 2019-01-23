@@ -5,8 +5,8 @@ easy_admin:
         assets:
             css:
                 - 'bundles/easyadmin/app.css'
-                - 'bundles/easyadminextension/stylesheet/full-width.css'
                 - 'bundles/easyadmin/bootstrap-all.css'
+                - 'bundles/easyadminextension/stylesheet/full-width.css'
             js:
                 # By default, EasyAdminBundle embeds a limited version of Bootstrap JS.
                 # For collapsible form filters to work, a full version should be added:
@@ -101,5 +101,6 @@ easy_admin:
                 fields:
                     - property: archiver
                     - property: documentIdentifier
+                    - property: shareFileItemId
                     - property: updatedAt
                     - property: createdAt
