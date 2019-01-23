@@ -11,7 +11,6 @@
 namespace App\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Loggable;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -37,16 +36,19 @@ class Archiver implements Loggable
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Gedmo\Versioned()
      */
     private $name;
 
     /**
      * @ORM\Column(type="text")
+     * @Gedmo\Versioned()
      */
     private $configuration;
 
     /**
      * @ORM\Column(type="boolean")
+     * @Gedmo\Versioned()
      */
     private $enabled;
 
