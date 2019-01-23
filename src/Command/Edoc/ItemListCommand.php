@@ -31,6 +31,7 @@ class ItemListCommand extends Command
 
     public function configure()
     {
+        parent::configure();
         $types = implode(', ', ItemListType::getValues());
         $this->setName('app:edoc:item-list')
             ->addArgument('type', InputArgument::REQUIRED, 'The item list type ('.$types.')');
@@ -39,6 +40,7 @@ class ItemListCommand extends Command
     public function execute(InputInterface $input, OutputInterface $output)
     {
         parent::execute($input, $output);
+        $this->edoc->setArchiver($this->archiver);
 
         $type = $input->getArgument('type');
         if (!\in_array($type, ItemListType::getValues(), true)) {
