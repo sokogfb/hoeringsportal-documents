@@ -162,4 +162,11 @@ class Archiver implements Loggable
 
         return $key ? ($configuration[$key] ?? $default) : $configuration;
     }
+
+    public function getCreateHearing(): bool
+    {
+        $value = $this->getConfigurationValue('edoc');
+
+        return isset($value['project_id']);
+    }
 }
