@@ -117,6 +117,8 @@ class ShareFileService
         $itemId = $this->getItemId($item);
         $item = $this->client()->getItemById($itemId);
 
+        $this->setMetadata($item);
+
         return new Item($item);
     }
 
@@ -197,7 +199,14 @@ class ShareFileService
     {
         $itemId = $this->getItemId($item);
 
-        return $this->getChildren($itemId, self::SHAREFILE_FOLDER, $changedAfter);
+        $folders = $this->getChildren($itemId, self::SHAREFILE_FOLDER, $changedAfter);
+
+        // Add metadata values to each folder.
+        foreach ($folders as &$folder) {
+            $this->setMetadata($folder);
+        }
+
+        return $folders;
     }
 
     public function downloadFile($item)
@@ -238,6 +247,11 @@ class ShareFileService
         }
 
         $table->render();
+    }
+
+    private function setMetadata(array &$item)
+    {
+        $item['_metadata'] = $this->getMetadataValues($item['Id'], ['agent_data', 'ticket_data', 'user_data']);
     }
 
     private function validateConfiguration()

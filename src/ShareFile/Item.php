@@ -23,6 +23,8 @@ class Item extends Entity
 
     public $creationDate;
 
+    public $metadata;
+
     /**
      * @var Item[]
      */
@@ -50,5 +52,6 @@ class Item extends Entity
         $this->name = $data['Name'];
         $this->progenyEditDate = $data['ProgenyEditDate'] ?? null;
         $this->creationDate = $data['CreationDate'];
+        $this->metadata = $data['_metadata'] ?? null;
     }
 }

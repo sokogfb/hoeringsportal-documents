@@ -112,6 +112,10 @@ class EdocService
             'TitleText' => $name,
         ];
 
+        if (isset($this->configuration['project_id'])) {
+            $data += ['Project' => $this->configuration['project_id']];
+        }
+
         if (isset($this->configuration['case_file']['defaults'])) {
             $data += $this->configuration['case_file']['defaults'];
         }
@@ -251,9 +255,11 @@ class EdocService
      */
     public function getCases(array $criteria = [])
     {
-        $criteria += [
-            'Project' => $this->configuration['project_id'],
-        ];
+        if (isset($this->configuration['project_id'])) {
+            $criteria += [
+                'Project' => $this->configuration['project_id'],
+            ];
+        }
 
         return $this->edoc()->searchCaseFile($criteria);
     }
@@ -268,6 +274,13 @@ class EdocService
     public function getCaseByName(string $name)
     {
         $result = $this->getCases(['TitleText' => $name]);
+
+        return 1 === \count($result) ? reset($result) : null;
+    }
+
+    public function getCaseBySequenceNumber(string $number)
+    {
+        $result = $this->getCases(['SequenceNumber' => $number]);
 
         return 1 === \count($result) ? reset($result) : null;
     }
