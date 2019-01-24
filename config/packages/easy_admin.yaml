@@ -7,6 +7,8 @@ easy_admin:
                 - 'bundles/easyadmin/app.css'
                 - 'bundles/easyadmin/bootstrap-all.css'
                 - 'bundles/easyadminextension/stylesheet/full-width.css'
+                - 'build/easy_admin.css'
+
             js:
                 # By default, EasyAdminBundle embeds a limited version of Bootstrap JS.
                 # For collapsible form filters to work, a full version should be added:
