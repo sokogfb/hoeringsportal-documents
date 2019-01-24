@@ -14,6 +14,7 @@ use App\Entity\Archiver;
 use App\Repository\EDoc\CaseFileRepository;
 use App\Repository\EDoc\DocumentRepository;
 use App\ShareFile\Item;
+use App\Util\TemplateHelper;
 use ItkDev\Edoc\Entity\ArchiveFormat;
 use ItkDev\Edoc\Entity\CaseFile;
 use ItkDev\Edoc\Entity\Document;
@@ -24,11 +25,14 @@ use ItkDev\Edoc\Util\ItemListType;
 
 class EdocService
 {
+    /** @var CaseFileRepository */
+    private $caseFileRepository;
+
     /** @var DocumentRepository */
     private $documentRepository;
 
-    /** @var CaseFileRepository */
-    private $caseFileRepository;
+    /** @var TemplateHelper */
+    private $template;
 
     /** @var Archiver */
     private $archiver;
@@ -42,10 +46,11 @@ class EdocService
     /** @var Edoc */
     private $edoc;
 
-    public function __construct(CaseFileRepository $caseFileRepository, DocumentRepository $documentRepository)
+    public function __construct(CaseFileRepository $caseFileRepository, DocumentRepository $documentRepository, TemplateHelper $template)
     {
         $this->caseFileRepository = $caseFileRepository;
         $this->documentRepository = $documentRepository;
+        $this->template = $template;
     }
 
     public function __call($name, array $arguments)
@@ -90,7 +95,7 @@ class EdocService
         ]);
         $hearing = $caseFile ? $this->getCaseById($caseFile->getCaseFileIdentifier()) : null;
         if (null !== $hearing || !$create) {
-            // @TODO Update hearing.
+            // @TODO Update hearing?
             return $hearing;
         }
 
@@ -292,6 +297,11 @@ class EdocService
         return $result;
     }
 
+    public function getDocumentsBy(array $criteria)
+    {
+        return $this->edoc()->searchDocument($criteria);
+    }
+
     public function getDocumentById(string $id)
     {
         $result = $this->edoc()->searchDocument(['DocumentIdentifier' => $id]);
@@ -309,14 +319,31 @@ class EdocService
         return 1 === \count($result) ? reset($result) : null;
     }
 
+    public function getCaseWorkerByAz($az)
+    {
+        $az = 'adm\\'.$az;
+        $result = $this->edoc()->getItemList(
+            ItemListType::CASE_WORKER,
+            [
+                'CaseWorkerAccountName' => $az,
+            ]
+        );
+
+        return 1 === \count($result) ? reset($result) : null;
+    }
+
     private function getCaseFileName(Item $item)
     {
-        return $item->name;
+        $template = $this->configuration['case_file']['name'] ?? '{{ item.name }}';
+
+        return $this->template->render($template, ['item' => ['name' => $item->name] + $item->metadata]);
     }
 
     private function getResponseName(Item $item)
     {
-        return $item->name;
+        $template = $this->configuration['document']['name'] ?? '{{ item.name }}';
+
+        return $this->template->render($template, ['item' => ['name' => $item->name] + $item->metadata]);
     }
 
     private function validateConfiguration()

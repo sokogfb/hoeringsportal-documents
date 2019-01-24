@@ -172,7 +172,8 @@ class Archiver implements Loggable
         return isset($value['project_id']);
     }
 
-    public function getEdocCaseFileUrl(CaseFile $caseFile) {
+    public function getEdocCaseFileUrl(CaseFile $caseFile)
+    {
         $data = $caseFile->getData()['edoc'];
         $baseUrl = $this->getConfigurationValue('edoc')['admin_url'] ?? '';
 
@@ -186,7 +187,8 @@ class Archiver implements Loggable
             ]);
     }
 
-    public function getEdocDocumentUrl(Document $document) {
+    public function getEdocDocumentUrl(Document $document)
+    {
         $data = $document->getData()['edoc'];
         $baseUrl = $this->getConfigurationValue('edoc')['admin_url'] ?? '';
 

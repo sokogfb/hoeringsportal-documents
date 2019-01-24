@@ -132,18 +132,19 @@ class ArchiveHelper
         }
     }
 
-    private function logException(\Throwable $t) {
+    public function log($level, $message, array $context = [])
+    {
+        if (null !== $this->logger) {
+            $this->logger->log($level, $message, $context);
+        }
+    }
+
+    private function logException(\Throwable $t)
+    {
         $this->emergency($t->getMessage());
         $logEntry = new ExceptionLogEntry($t);
         $this->entityManager->persist($logEntry);
         $this->entityManager->flush();
         // @TODO: Notify user of exception.
-    }
-
-    public function log($level, $message, array $context = array())
-    {
-        if (null !== $this->logger) {
-            $this->logger->log($level, $message, $context);
-        }
     }
 }
