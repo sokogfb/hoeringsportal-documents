@@ -11,14 +11,20 @@
 namespace App\Service;
 
 use App\Entity\Archiver;
+use App\Entity\ExceptionLogEntry;
+use App\Entity\Log;
 use App\Exception\RuntimeException;
 use App\Repository\EDoc\CaseFileRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use ItkDev\Edoc\Entity\ArchiveFormat;
-use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerTrait;
 
 class ArchiveHelper
 {
+    use LoggerAwareTrait;
+    use LoggerTrait;
+
     /** @var ShareFileService */
     private $shareFile;
 
@@ -33,7 +39,7 @@ class ArchiveHelper
         $this->entityManager = $entityManager;
     }
 
-    public function archive(Archiver $archiver, LoggerInterface $logger)
+    public function archive(Archiver $archiver)
     {
         if (!$archiver->isEnabled()) {
             throw new \RuntimeException('Archiver '.$archiver.' is not enabled.');
@@ -50,7 +56,7 @@ class ArchiveHelper
 //        }
 
 //        try {
-//            $logger->info('Checking connection to eDoc');
+//            $this->info('Checking connection to eDoc');
 //            $this->edoc->connect();
 //        } catch (\Exception $ex) {
 //            throw new RuntimeException('Cannot connect to eDoc.', $ex->getCode(), $ex);
@@ -60,7 +66,7 @@ class ArchiveHelper
         $date = $archiver->getLastRunAt();
 
         try {
-            $logger->info('Getting files updated since '.$date->format(\DateTime::ATOM).' from ShareFile');
+            $this->info('Getting files updated since '.$date->format(\DateTime::ATOM).' from ShareFile');
 
             $shareFileData = $this->shareFile->getUpdatedFiles($date);
 
@@ -71,13 +77,14 @@ class ArchiveHelper
                     try {
                         if (null === $edocHearing) {
                             if ($archiver->getCreateHearing()) {
-                                $logger->info('Creating hearing: '.$shareFileHearing->name);
+                                $this->info('Creating hearing: '.$shareFileHearing->name);
+                                $shareFileHearing->metadata = $shareFileResponse->metadata;
                                 $edocHearing = $this->edoc->getHearing($shareFileHearing, true);
                                 if (null === $edocHearing) {
                                     throw new RuntimeException('Error creating hearing: '.$shareFileHearing['Name']);
                                 }
                             } else {
-                                $logger->info('Getting hearing for response '.$shareFileResponse->name);
+                                $this->info('Getting hearing for response '.$shareFileResponse->name);
                                 $edocCaseFileId = $shareFileResponse->metadata['ticket_data']['edoc_case_id'] ?? null;
                                 if (null === $edocCaseFileId) {
                                     throw new RuntimeException('Cannot get eDoc Case File Id from item '.$shareFileResponse->name.' ('.$shareFileResponse->id.')');
@@ -89,9 +96,9 @@ class ArchiveHelper
                             }
                         }
 
-                        $logger->info($shareFileResponse->name);
+                        $this->info($shareFileResponse->name);
                         $edocResponse = $this->edoc->getResponse($edocHearing, $shareFileResponse);
-                        $logger->info('Getting file contents from ShareFile');
+                        $this->info('Getting file contents from ShareFile');
                         // @TODO: Decide which file(s) to store in eDoc
                         $fileContents = $this->shareFile->downloadFile($shareFileResponse);
                         $fileData = [
@@ -99,12 +106,12 @@ class ArchiveHelper
                             'DocumentContents' => base64_encode($fileContents),
                         ];
                         if (null === $edocResponse) {
-                            $logger->info('Creating new document in eDoc');
+                            $this->info('Creating new document in eDoc');
                             $edocResponse = $this->edoc->createResponse($edocHearing, $shareFileResponse, [
                                 'DocumentVersion' => $fileData,
                             ]);
                         } else {
-                            $logger->info('Updating document in eDoc');
+                            $this->info('Updating document in eDoc');
                             // @TODO: Check that file actually is newer than the one stored in eDoc.
                             $edocResponse = $this->edoc->updateResponse($edocResponse, $shareFileResponse, $fileData);
                         }
@@ -112,7 +119,7 @@ class ArchiveHelper
                             throw new RuntimeException('Error creating response: '.$shareFileResponse['Name']);
                         }
                     } catch (\Throwable $t) {
-                        // @TODO Log exception and send email with exception report.
+                        $this->logException($t);
                     }
                 }
             }
@@ -121,7 +128,22 @@ class ArchiveHelper
             $this->entityManager->persist($archiver);
             $this->entityManager->flush();
         } catch (\Throwable $t) {
-            throw $t;
+            $this->logException($t);
+        }
+    }
+
+    private function logException(\Throwable $t) {
+        $this->emergency($t->getMessage());
+        $logEntry = new ExceptionLogEntry($t);
+        $this->entityManager->persist($logEntry);
+        $this->entityManager->flush();
+        // @TODO: Notify user of exception.
+    }
+
+    public function log($level, $message, array $context = array())
+    {
+        if (null !== $this->logger) {
+            $this->logger->log($level, $message, $context);
         }
     }
 }

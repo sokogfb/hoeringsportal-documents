@@ -50,6 +50,7 @@ class ArchiveCommand extends Command
         }
 
         $logger = new ConsoleLogger($output);
-        $this->helper->archive($this->archiver, $logger);
+        $this->helper->setLogger($logger);
+        $this->helper->archive($this->archiver);
     }
 }

@@ -10,6 +10,8 @@
 
 namespace App\Entity;
 
+use App\Entity\EDoc\CaseFile;
+use App\Entity\EDoc\Document;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Loggable;
@@ -168,5 +170,33 @@ class Archiver implements Loggable
         $value = $this->getConfigurationValue('edoc');
 
         return isset($value['project_id']);
+    }
+
+    public function getEdocCaseFileUrl(CaseFile $caseFile) {
+        $data = $caseFile->getData()['edoc'];
+        $baseUrl = $this->getConfigurationValue('edoc')['admin_url'] ?? '';
+
+        return $baseUrl
+            .'/locator.aspx?'
+            .http_build_query([
+                'name' => 'DMS.Case.Details.Simplified.300001',
+                'module' => 'Case',
+                'subtype' => 300001, // ???
+                'recno' => $data['RecordIdentifier'] ?? null,
+            ]);
+    }
+
+    public function getEdocDocumentUrl(Document $document) {
+        $data = $document->getData()['edoc'];
+        $baseUrl = $this->getConfigurationValue('edoc')['admin_url'] ?? '';
+
+        return $baseUrl
+            .'/locator.aspx?'
+            .http_build_query([
+                'name' => 'DMS.Document.Details.Simplified.2',
+                'module' => 'Document',
+                'subtype' => 2, // ???
+                'recno' => $data['RecordIdentifier'],
+            ]);
     }
 }
