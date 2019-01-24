@@ -11,10 +11,31 @@
 namespace App\Controller;
 
 use AlterPHP\EasyAdminExtensionBundle\Controller\EasyAdminController;
+use App\Entity\ExceptionLogEntry;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
 
 class AdminController extends EasyAdminController
 {
+    /**
+     * @Route(path = "/admin/exception_log_entry/hide", name = "exception_log_entry_hide")
+     */
+    public function hideExceptionLogEntryAction(Request $request, EntityManagerInterface $entityManager)
+    {
+        $id = $request->query->get('id');
+        $entity = $entityManager->getRepository(ExceptionLogEntry::class)->find($id);
+        if (null !== $entity) {
+            $entity->setHidden(true);
+            $entityManager->flush($entity);
+        }
+
+        return $this->redirectToRoute('easyadmin', [
+            'action' => 'list',
+            'entity' => $request->query->get('entity'),
+        ]);
+    }
+
     protected function initialize(Request $request)
     {
         parent::initialize($request);

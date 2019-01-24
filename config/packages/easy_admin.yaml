@@ -70,6 +70,11 @@ easy_admin:
             list:
                 dql_filter: 'entity.hidden != 1'
                 sort: ['createdAt', 'DESC']
+                actions:
+                    -
+                        name: exception_log_entry_hide
+                        type: route
+                        label: Hide
 
                 # form_filters:
                 #     - hidden
