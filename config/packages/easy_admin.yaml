@@ -114,6 +114,8 @@ easy_admin:
                     - property: archiver
                     - property: caseFileIdentifier
                     - property: shareFileItemId
+                    - property: edoc
+                      template: admin/Edoc/CaseFile/list/edoc.html.twig
                     - property: updatedAt
                     - property: createdAt
 
@@ -130,5 +132,7 @@ easy_admin:
                     - property: archiver
                     - property: documentIdentifier
                     - property: shareFileItemId
+                    - property: edoc
+                      template: admin/Edoc/Document/list/edoc.html.twig
                     - property: updatedAt
                     - property: createdAt

@@ -1,0 +1,4 @@
+{{ dump(item.data.edoc) }}
+
+{% set url = edoc_document_url(item) %}
+<a href="{{ url }}">{{ 'Open %title% in eDoc'|trans({'%title%': edoc_document_title(item)}) }}</a>
