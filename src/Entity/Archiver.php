@@ -18,6 +18,7 @@ use Gedmo\Loggable\Loggable;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -162,7 +163,17 @@ class Archiver implements Loggable
     {
         $configuration = Yaml::parse($this->getConfiguration());
 
-        return $key ? ($configuration[$key] ?? $default) : $configuration;
+        if (null === $key) {
+            return $configuration;
+        }
+
+        if (array_key_exists($key, $configuration)) {
+            return $configuration[$key];
+        }
+
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
+
+        return $propertyAccessor->getValue($configuration, $key) ?? $default;
     }
 
     public function getCreateHearing(): bool

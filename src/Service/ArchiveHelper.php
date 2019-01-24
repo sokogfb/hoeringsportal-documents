@@ -31,41 +31,42 @@ class ArchiveHelper
     /** @var EdocService */
     private $edoc;
 
-    public function __construct(ShareFileService $shareFile, EdocService $edoc, CaseFileRepository $caseFileRepository, EntityManagerInterface $entityManager)
+    /** @var CaseFileRepository */
+    private $caseFileRepository;
+
+    /** @var EntityManagerInterface */
+    private $entityManager;
+
+    /** @var \Swift_Mailer */
+    private $mailer;
+
+    /** @var Archiver */
+    private $archiver;
+
+    public function __construct(ShareFileService $shareFile, EdocService $edoc, CaseFileRepository $caseFileRepository, EntityManagerInterface $entityManager, \Swift_Mailer $mailer)
     {
         $this->shareFile = $shareFile;
         $this->edoc = $edoc;
         $this->caseFileRepository = $caseFileRepository;
         $this->entityManager = $entityManager;
+        $this->mailer = $mailer;
     }
 
     public function archive(Archiver $archiver)
     {
-        if (!$archiver->isEnabled()) {
-            throw new \RuntimeException('Archiver '.$archiver.' is not enabled.');
-        }
-
-        $this->shareFile->setArchiver($archiver);
-        $this->edoc->setArchiver($archiver);
-
-//        try {
-//            $logger->info('Checking connection to ShareFile');
-//            $this->shareFile->connect();
-//        } catch (\Exception $ex) {
-//            throw new RuntimeException('Cannot connect to ShareFile.', $ex->getCode(), $ex);
-//        }
-
-//        try {
-//            $this->info('Checking connection to eDoc');
-//            $this->edoc->connect();
-//        } catch (\Exception $ex) {
-//            throw new RuntimeException('Cannot connect to eDoc.', $ex->getCode(), $ex);
-//        }
-
-        $startTime = new \DateTime();
-        $date = $archiver->getLastRunAt();
+        $this->archiver = $archiver;
 
         try {
+            if (!$archiver->isEnabled()) {
+                throw new \RuntimeException('Archiver '.$archiver.' is not enabled.');
+            }
+
+            $this->shareFile->setArchiver($archiver);
+            $this->edoc->setArchiver($archiver);
+
+            $startTime = new \DateTime();
+            $date = $archiver->getLastRunAt();
+
             $this->info('Getting files updated since '.$date->format(\DateTime::ATOM).' from ShareFile');
 
             $shareFileData = $this->shareFile->getUpdatedFiles($date);
@@ -145,6 +146,19 @@ class ArchiveHelper
         $logEntry = new ExceptionLogEntry($t);
         $this->entityManager->persist($logEntry);
         $this->entityManager->flush();
-        // @TODO: Notify user of exception.
+
+        if (null !== $this->archiver) {
+            $config = $this->archiver->getConfigurationValue('[notifications][email]');
+
+            $message = (new \Swift_Message($t->getMessage()))
+                ->setFrom($config['from'])
+                ->setTo($config['to'])
+                ->setBody(
+                    $t->getTraceAsString(),
+                    'text/plain'
+                );
+
+            $this->mailer->send($message);
+        }
     }
 }
