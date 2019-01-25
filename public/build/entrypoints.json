@@ -1,0 +1,13 @@
+{
+  "entrypoints": {
+    "easy_admin": {
+      "js": [
+        "/build/runtime.js",
+        "/build/easy_admin.js"
+      ],
+      "css": [
+        "/build/easy_admin.css"
+      ]
+    }
+  }
+}
