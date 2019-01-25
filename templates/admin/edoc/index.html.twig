@@ -1,0 +1,47 @@
+{% extends '@EasyAdmin/default/layout.html.twig' %}
+
+{% block content_title %}
+    {{ 'eDoc item list'| trans }}
+{% endblock %}
+
+{% block main %}
+    {% form_theme form 'bootstrap_4_layout.html.twig' %}
+    {{ form_start(form, {'attr': {'class': 'form-inline'}}) }}
+        {{ form_label(form.type) }}
+        {{ form_widget(form.type, {'attr': {'class': 'form-control ml-2 mr-2'}}) }}
+
+        {{ form_label(form.archiver) }}
+        {{ form_widget(form.archiver, {'attr': {'class': 'form-control ml-2 mr-2'}}) }}
+
+        {{ form_widget(form.submit) }}
+    {{ form_end(form) }}
+
+    {% if items %}
+        <table class="table x-datagrid">
+            {% for item in items %}
+                {% if loop.first %}
+                    <thead>
+                        <tr>
+                            {% for key, value in item %}
+                                <th>{{ key }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                {% endif %}
+
+                <tr>
+                    {% for key, value in item %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+
+                {% if loop.last %}
+                    </tbody>
+                {% endif %}
+            {% endfor %}
+        </table>
+    {% else %}
+            <div class="alert alert-info">{{ 'Please select a type'|trans }}</div>
+    {% endif %}
+{% endblock %}

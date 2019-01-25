@@ -21,6 +21,9 @@ easy_admin:
             - { label: 'eDoc' }
             - EdocCaseFile
             - EdocDocument
+            -
+                label: 'Item list'
+                route: 'edoc_item_list'
 
     formats:
         datetime: 'd/m/Y H:i:s'
