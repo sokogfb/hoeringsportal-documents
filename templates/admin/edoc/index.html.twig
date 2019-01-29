@@ -4,7 +4,27 @@
     {{ 'eDoc item list'| trans }}
 {% endblock %}
 
+{% macro render_value(value) %}
+    {% import _self as self %}
+    {% if value is iterable %}
+        {#
+            @TODO: Handle numeric arrays
+            value|keys == range(0, value|length-1)
+            #}
+        <dl class="edoc-item-list-values">
+            {% for key, val in value %}
+                <dt>{{ key }}</dt>
+                <dd>{{ self.render_value(val) }}</dd>
+            {% endfor %}
+        </dl>
+    {% else %}
+        {{ value }}
+    {% endif %}
+{% endmacro %}
+
 {% block main %}
+    {% import _self as self %}
+
     {% form_theme form 'bootstrap_4_layout.html.twig' %}
     {{ form_start(form, {'attr': {'class': 'form-inline'}}) }}
         {{ form_label(form.type) }}
@@ -17,7 +37,7 @@
     {{ form_end(form) }}
 
     {% if items %}
-        <table class="table x-datagrid">
+        <table class="table x-datagrid edoc-item-list">
             {% for item in items %}
                 {% if loop.first %}
                     <thead>
@@ -32,7 +52,9 @@
 
                 <tr>
                     {% for key, value in item %}
-                        <td>{{ value }}</td>
+                        <td>
+                            {{ self.render_value(value) }}
+                        </td>
                     {% endfor %}
                 </tr>
 
