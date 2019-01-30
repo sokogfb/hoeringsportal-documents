@@ -66,7 +66,7 @@ class ItemListController extends EasyAdminController
             $items = $edoc->getItemList($type);
         }
 
-        return $this->render('admin/edoc/index.html.twig', [
+        return $this->render('admin/edoc/item-list.html.twig', [
             'form' => $form->createView(),
             'archiver' => $archiver,
             'type' => $type,
