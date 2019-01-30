@@ -39,6 +39,7 @@ easy_admin:
             list:
                 fields:
                     - property: name
+                    - property: type
                     - property: enabled
                       type: boolean
                     - property: lastRunAt
@@ -46,6 +47,12 @@ easy_admin:
             form:
                 fields:
                     - property: name
+                    - property: type
+                      type: choice
+                      type_options:
+                          choices:
+                              sharefile2edoc: sharefile2edoc
+
                     - property: enabled
                     - property: configuration
                       type: App\Form\Type\YamlType

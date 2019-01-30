@@ -60,6 +60,11 @@ class Archiver implements Loggable
      */
     private $lastRunAt;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $type;
+
     // /**
     //  * @ORM\OneToMany(targetEntity="App\Entity\EDocLogEntry", mappedBy="archiver", orphanRemoval=true)
     //  */
@@ -225,5 +230,17 @@ class Archiver implements Loggable
         $map = $this->getConfigurationValue('[edoc][organizations]') ?? [];
 
         return $map[$id] ?? $map['default'] ?? null;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
     }
 }

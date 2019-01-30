@@ -20,10 +20,15 @@ use ItkDev\Edoc\Entity\ArchiveFormat;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerTrait;
 
-class ArchiveHelper
+class ArchiveHelper extends AbstractArchiveHelper
 {
     use LoggerAwareTrait;
     use LoggerTrait;
+
+    /**
+     * {@inheritdoc}
+     */
+    protected $archiverType = 'sharefile2edoc';
 
     /** @var ShareFileService */
     private $shareFile;
@@ -59,6 +64,10 @@ class ArchiveHelper
         try {
             if (!$archiver->isEnabled()) {
                 throw new \RuntimeException('Archiver '.$archiver.' is not enabled.');
+            }
+
+            if ($archiver->getType() !== $this->archiverType) {
+                throw new \RuntimeException('Cannot handle archiver with type'.$archiver->getType());
             }
 
             $this->shareFile->setArchiver($archiver);
