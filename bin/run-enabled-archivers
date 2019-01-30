@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+
+for id in $($dir/console app:archiver:list --field=id --enabled=yes); do
+  echo $id
+  $dir/console app:sharefile2edoc:archive "$id" "$@"
+done
