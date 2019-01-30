@@ -77,10 +77,31 @@ class ArchiveHelper
                 foreach ($shareFileHearing->getChildren() as $shareFileResponse) {
                     try {
                         if (null === $edocHearing) {
+                            $azident = $shareFileResponse->metadata['agent_data']['az'] ?? null;
+                            $azident = 'azqsb01';
+                            $caseWorker = $this->edoc->getCaseWorkerByAz($azident);
+                            if (null !== $azident && null === $caseWorker) {
+                                throw new RuntimeException('Unknown case worker '.$azident.' on item '.$shareFileResponse->id);
+                            }
+                            $departmentId = $shareFileResponse->metadata['ticket_data']['department_id'] ?? null;
+                            $organisationReference = $archiver->getEdocOrganizationReference($departmentId);
+                            if (null !== $departmentId && null === $organisationReference) {
+                                throw new RuntimeException('Unknown department: '.$departmentId.' on item '.$shareFileResponse->id);
+                            }
+
                             if ($archiver->getCreateHearing()) {
                                 $this->info('Creating hearing: '.$shareFileHearing->name);
                                 $shareFileHearing->metadata = $shareFileResponse->metadata;
-                                $edocHearing = $this->edoc->getHearing($shareFileHearing, true);
+
+                                $data = [];
+                                if (null !== $caseWorker) {
+                                    $data['CaseWorkerAccountName'] = $caseWorker['CaseWorkerAccountName'];
+                                }
+                                if (null !== $organisationReference) {
+                                    $data['OrganisationReference'] = $organisationReference;
+                                }
+
+                                $edocHearing = $this->edoc->getHearing($shareFileHearing, true, $data);
                                 if (null === $edocHearing) {
                                     throw new RuntimeException('Error creating hearing: '.$shareFileHearing['Name']);
                                 }
@@ -100,17 +121,47 @@ class ArchiveHelper
                         $this->info($shareFileResponse->name);
                         $edocResponse = $this->edoc->getResponse($edocHearing, $shareFileResponse);
                         $this->info('Getting file contents from ShareFile');
-                        // @TODO: Decide which file(s) to store in eDoc
-                        $fileContents = $this->shareFile->downloadFile($shareFileResponse);
+
+                        $sourceFile = null;
+                        $sourceFileType = null;
+                        $pattern = $this->archiver->getConfigurationValue('[edoc][sharefile_file_name_pattern]');
+                        if (null !== $pattern) {
+                            $files = $this->shareFile->getFiles($shareFileResponse);
+                            foreach ($files as $file) {
+                                if (fnmatch($pattern, $file['Name'])) {
+                                    $sourceFile = $file;
+                                    $sourceFileType = $this->archiver->getConfigurationValue('[edoc][sharefile_file_type]');
+                                }
+                            }
+                            if (null === $sourceFile) {
+                                throw new RuntimeException('Cannot find file matching pattern '.$pattern.' for item '.$shareFileResponse->id);
+                            }
+                        } else {
+                            $sourceFile = $shareFileResponse;
+                            $sourceFileType = ArchiveFormat::ZIP;
+                        }
+                        $fileContents = $this->shareFile->downloadFile($sourceFile);
+                        if (null === $fileContents) {
+                            throw new RuntimeException('Cannot get file contents for item '.$shareFileResponse->id);
+                        }
                         $fileData = [
-                            'ArchiveFormatCode' => ArchiveFormat::ZIP,
+                            'ArchiveFormatCode' => $sourceFileType,
                             'DocumentContents' => base64_encode($fileContents),
                         ];
                         if (null === $edocResponse) {
                             $this->info('Creating new document in eDoc');
-                            $edocResponse = $this->edoc->createResponse($edocHearing, $shareFileResponse, [
+
+                            $data = [
                                 'DocumentVersion' => $fileData,
-                            ]);
+                            ];
+                            if (null !== $caseWorker) {
+                                $data['CaseWorkerAccountName'] = $caseWorker['CaseWorkerAccountName'];
+                            }
+                            if (null !== $organisationReference) {
+                                $data['OrganisationReference'] = $organisationReference;
+                            }
+
+                            $edocResponse = $this->edoc->createResponse($edocHearing, $shareFileResponse, $data);
                         } else {
                             $this->info('Updating document in eDoc');
                             // @TODO: Check that file actually is newer than the one stored in eDoc.

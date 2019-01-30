@@ -212,4 +212,18 @@ class Archiver implements Loggable
                 'recno' => $data['RecordIdentifier'],
             ]);
     }
+
+    /**
+     * Get eDoc organization reference (id) from Deskpro department id.
+     *
+     * @param $id
+     *
+     * @return null|int
+     */
+    public function getEdocOrganizationReference($id)
+    {
+        $map = $this->getConfigurationValue('[edoc][organizations]') ?? [];
+
+        return $map[$id] ?? $map['default'] ?? null;
+    }
 }
