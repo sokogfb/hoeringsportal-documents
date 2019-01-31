@@ -87,7 +87,6 @@ class ArchiveHelper extends AbstractArchiveHelper
                     try {
                         if (null === $edocHearing) {
                             $azident = $shareFileResponse->metadata['agent_data']['az'] ?? null;
-                            $azident = 'azqsb01';
                             $caseWorker = $this->edoc->getCaseWorkerByAz($azident);
                             if (null !== $azident && null === $caseWorker) {
                                 throw new RuntimeException('Unknown case worker '.$azident.' on item '.$shareFileResponse->id);
