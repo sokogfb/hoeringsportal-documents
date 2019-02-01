@@ -26,12 +26,12 @@ use Symfony\Component\Routing\Annotation\Route;
  *
  * @Route(path="/admin/edoc")
  */
-class ItemListController extends EasyAdminController
+class AdminController extends EasyAdminController
 {
     /**
      * @Route(path = "/item-list", name = "edoc_item_list")
      */
-    public function index(Request $request, EdocService $edoc)
+    public function itemList(Request $request, EdocService $edoc)
     {
         $types = ItemListType::getValues();
         $form = $this->createFormBuilder()
