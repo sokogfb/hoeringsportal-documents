@@ -1,0 +1,7 @@
+{% set url = item.data.edoc.Links.OpenDocument|default('') %}
+{% set file_url = item.data.edoc.Links.ShowDocumentBinary|default('') %}
+{% if url %}
+    <a href="{{ url }}">{{ value }}</a>
+{% else %}
+    {{ value }}
+{% endif %}

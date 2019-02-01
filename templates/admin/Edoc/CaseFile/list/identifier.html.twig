@@ -1,0 +1,6 @@
+{% set url = item.data.edoc.Links.OpenCaseFile|default('') %}
+{% if url %}
+    <a href="{{ url }}">{{ value }}</a>
+{% else %}
+    {{ value }}
+{% endif %}
