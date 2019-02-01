@@ -32,16 +32,19 @@ class CaseFileRepository extends ServiceEntityRepository
 
     public function created(EDocCaseFile $caseFile, Item $item, Archiver $archiver)
     {
+        $caseFileIdentifier = $caseFile->CaseFileIdentifier;
+        $shareFileItemId = $item->id;
+
         $entity = $this->findOneBy([
-            'caseFileIdentifier' => $caseFile->CaseFileIdentifier,
-            'shareFileItemId' => $item->id,
+            'caseFileIdentifier' => $caseFileIdentifier,
+            'shareFileItemId' => $shareFileItemId,
             'archiver' => $archiver,
         ]);
 
         if (null === $entity) {
             $entity = (new CaseFile())
-                ->setCaseFileIdentifier($caseFile->CaseFileIdentifier)
-                ->setShareFileItemId($item->id)
+                ->setCaseFileIdentifier($caseFileIdentifier)
+                ->setShareFileItemId($shareFileItemId)
                 ->setArchiver($archiver);
         }
 
@@ -58,33 +61,4 @@ class CaseFileRepository extends ServiceEntityRepository
 
         return $entity;
     }
-
-    // /**
-    //  * @return Document[] Returns an array of Document objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('d')
-            ->andWhere('d.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('d.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?Document
-    {
-        return $this->createQueryBuilder('d')
-            ->andWhere('d.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

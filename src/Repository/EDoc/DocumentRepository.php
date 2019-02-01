@@ -32,16 +32,19 @@ class DocumentRepository extends ServiceEntityRepository
 
     public function created(EDocDocument $document, Item $item, Archiver $archiver)
     {
+        $documentIdentifier = $document->DocumentIdentifier;
+        $shareFileItemId = $item->id;
+
         $entity = $this->findOneBy([
-            'documentIdentifier' => $document->DocumentIdentifier,
-            'shareFileItemId' => $item->id,
+            'documentIdentifier' => $documentIdentifier,
+            'shareFileItemId' => $shareFileItemId,
             'archiver' => $archiver,
         ]);
 
         if (null === $entity) {
             $entity = (new Document())
-                ->setDocumentIdentifier($document->DocumentIdentifier)
-                ->setShareFileItemId($item->id)
+                ->setDocumentIdentifier($documentIdentifier)
+                ->setShareFileItemId($shareFileItemId)
                 ->setArchiver($archiver);
         }
 
