@@ -1,7 +1,13 @@
-{% set url = item.data.edoc.Links.OpenDocument|default('') %}
-{% set file_url = item.data.edoc.Links.ShowDocumentBinary|default('') %}
+{% set edoc_data = item.data.edoc|default(null) %}
+{% set url = edoc_data.Links.OpenDocument|default(null) %}
 {% if url %}
-    <a href="{{ url }}">{{ value }}</a>
+    <a href="{{ url }}">
+        {{ value }}
+        {% if edoc_data.TitleText|default(null) %}
+            <br/>
+            {{ edoc_data.DocumentNumber }}: {{ edoc_data.TitleText }}
+        {% endif %}
+    </a>
 {% else %}
     {{ value }}
 {% endif %}

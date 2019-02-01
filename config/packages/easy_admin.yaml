@@ -15,15 +15,15 @@ easy_admin:
                 - 'bundles/easyadmin/bootstrap-all.js'
 
         menu:
-            - Archiver
-            # - User
-            - Log
-            - { label: 'eDoc' }
-            - EdocCaseFile
-            - EdocDocument
-            -
-                label: 'Item list'
-                route: 'edoc_item_list'
+            - entity: Archiver
+            # - entity: User
+            - entity: Log
+              label: 'Error log'
+            - label: 'eDoc'
+            - label: 'Item list'
+              route: 'edoc_item_list'
+            - entity: EdocCaseFile
+            - entity: EdocDocument
 
     formats:
         datetime: 'd/m/Y H:i:s'

@@ -1,6 +1,13 @@
-{% set url = item.data.edoc.Links.OpenCaseFile|default('') %}
+{% set edoc_data = item.data.edoc|default(null) %}
+{% set url = edoc_data.Links.OpenCaseFile|default(null) %}
 {% if url %}
-    <a href="{{ url }}">{{ value }}</a>
+    <a href="{{ url }}">
+        {{ value }}
+        {% if edoc_data.TitleText|default(null) %}
+            <br/>
+            {{ edoc_data.SequenceNumber }}: {{ edoc_data.TitleText }}
+        {% endif %}
+    </a>
 {% else %}
     {{ value }}
 {% endif %}

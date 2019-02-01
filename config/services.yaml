@@ -67,3 +67,9 @@ services:
             - method: setArchiverRepository
               arguments:
                   - '@App\Repository\ArchiverRepository'
+
+    App\Command\ShareFile\TestCommand:
+        calls:
+            - method: setArchiverRepository
+              arguments:
+                  - '@App\Repository\ArchiverRepository'
