@@ -176,6 +176,9 @@
     "ocramius/proxy-manager": {
         "version": "2.1.1"
     },
+    "opis/json-schema": {
+        "version": "1.0.15"
+    },
     "pagerfanta/pagerfanta": {
         "version": "v2.0.1"
     },
