@@ -27,7 +27,8 @@ class AdminController extends EasyAdminController
         $entity = $entityManager->getRepository(ExceptionLogEntry::class)->find($id);
         if (null !== $entity) {
             $entity->setHidden(true);
-            $entityManager->flush($entity);
+            $entityManager->persist($entity);
+            $entityManager->flush();
         }
 
         return $this->redirectToRoute('easyadmin', [

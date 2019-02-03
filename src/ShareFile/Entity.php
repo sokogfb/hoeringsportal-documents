@@ -31,7 +31,12 @@ abstract class Entity implements \ArrayAccess, \JsonSerializable
             return $this->data[$name];
         }
 
-        throw new \Exception('Undefined property: '.$name);
+        throw new \OutOfBoundsException('Undefined property: '.$name);
+    }
+
+    public function __set($name, $value)
+    {
+        throw new \RuntimeException(__METHOD__.' not implemented');
     }
 
     public function offsetExists($offset)

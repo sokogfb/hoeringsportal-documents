@@ -12,7 +12,6 @@ namespace App\Service;
 
 use App\Entity\Archiver;
 use App\Entity\ExceptionLogEntry;
-use App\Entity\Log;
 use App\Exception\RuntimeException;
 use App\Repository\EDoc\CaseFileRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -36,9 +35,6 @@ class ArchiveHelper extends AbstractArchiveHelper
     /** @var EdocService */
     private $edoc;
 
-    /** @var CaseFileRepository */
-    private $caseFileRepository;
-
     /** @var EntityManagerInterface */
     private $entityManager;
 
@@ -52,7 +48,6 @@ class ArchiveHelper extends AbstractArchiveHelper
     {
         $this->shareFile = $shareFile;
         $this->edoc = $edoc;
-        $this->caseFileRepository = $caseFileRepository;
         $this->entityManager = $entityManager;
         $this->mailer = $mailer;
     }
@@ -74,7 +69,7 @@ class ArchiveHelper extends AbstractArchiveHelper
             $this->edoc->setArchiver($archiver);
 
             $startTime = new \DateTime();
-            $date = $archiver->getLastRunAt();
+            $date = $archiver->getLastRunAt() ?? new \DateTime('-1 month ago');
 
             $this->info('Getting files updated since '.$date->format(\DateTime::ATOM).' from ShareFile');
 
@@ -85,6 +80,8 @@ class ArchiveHelper extends AbstractArchiveHelper
 
                 foreach ($shareFileHearing->getChildren() as $shareFileResponse) {
                     try {
+                        $caseWorker = null;
+                        $organisationReference = null;
                         if (null === $edocHearing) {
                             $azident = $shareFileResponse->metadata['agent_data']['az'] ?? null;
                             $caseWorker = $this->edoc->getCaseWorkerByAz($azident);
@@ -108,6 +105,8 @@ class ArchiveHelper extends AbstractArchiveHelper
                                 if (null !== $organisationReference) {
                                     $data['OrganisationReference'] = $organisationReference;
                                 }
+
+                                // @TODO: Validate that CaseWorker, Organization and PrimaryCode are set (correctly)!
 
                                 $edocHearing = $this->edoc->getHearing($shareFileHearing, true, $data);
                                 if (null === $edocHearing) {

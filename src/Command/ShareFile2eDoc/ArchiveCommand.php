@@ -42,8 +42,7 @@ class ArchiveCommand extends Command
 
         if ($lastRunAt = $input->getOption('last-run-at')) {
             try {
-                $lastRunAt = new \DateTime($lastRunAt);
-                $this->archiver->setLastRunAt($lastRunAt);
+                $this->archiver->setLastRunAt(new \DateTime($lastRunAt));
             } catch (\Exception $ex) {
                 throw new RuntimeException('Invalid last-run-at value: '.$lastRunAt);
             }

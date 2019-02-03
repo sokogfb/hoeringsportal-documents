@@ -18,8 +18,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ShareFileService
 {
-    const SHAREFILE_FOLDER = 'ShareFile.Api.Models.Folder';
-    const SHAREFILE_FILE = 'ShareFile.Api.Models.File';
+    private const SHAREFILE_FOLDER = 'ShareFile.Api.Models.Folder';
+    private const SHAREFILE_FILE = 'ShareFile.Api.Models.File';
 
     /** @var Archiver */
     private $archiver;
@@ -184,12 +184,8 @@ class ShareFileService
         $itemId = $this->getItemId($item);
         $children = $this->getChildren($itemId, self::SHAREFILE_FILE, $changedAfter);
         $files = array_filter($children ?? [], function ($item) use ($changedAfter) {
-            if ($changedAfter && isset($item['CreationDate'])
-                && new \DateTime($item['CreationDate']) < $changedAfter) {
-                return false;
-            }
-
-            return true;
+            return !(null !== $changedAfter && isset($item['CreationDate'])
+                && new \DateTime($item['CreationDate']) < $changedAfter);
         });
 
         return $this->construct(Item::class, $files);
@@ -300,9 +296,7 @@ class ShareFileService
 //            $query['$filter'] .= 'ProgenyEditDate gt date('.$changedAfter->format('Y-m-d').')';
 //        }
 
-        $result = $this->getAllChildren($itemId, $query);
-
-        return $result;
+        return $this->getAllChildren($itemId, $query);
     }
 
     /**

@@ -39,7 +39,7 @@ class YamlType extends AbstractType implements DataTransformerInterface
         try {
             $data = Yaml::parse($value);
             if (!\is_array($data)) {
-                throw new \Exception('data must be an array');
+                throw new \UnexpectedValueException('data must be an array');
             }
             if (isset($this->options['schema'])) {
                 $this->validateData($data, $this->options['schema']);

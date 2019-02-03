@@ -220,9 +220,7 @@ class EdocService
      */
     public function getArchiveFormats()
     {
-        $result = $this->edoc()->getArchiveFormats();
-
-        return $result;
+        return $this->edoc()->getArchiveFormats();
     }
 
     /**
@@ -248,9 +246,7 @@ class EdocService
      */
     public function getCaseTypes()
     {
-        $result = $this->edoc()->getItemList(ItemListType::CASE_TYPE);
-
-        return $result;
+        return $this->edoc()->getItemList(ItemListType::CASE_TYPE);
     }
 
     /**
@@ -292,9 +288,7 @@ class EdocService
 
     public function getDocuments(array $case)
     {
-        $result = $this->edoc()->searchDocument($case);
-
-        return $result;
+        return $this->edoc()->searchDocument($case);
     }
 
     public function getDocumentsBy(array $criteria)

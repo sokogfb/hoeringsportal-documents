@@ -37,7 +37,7 @@ class ExceptionLogEntry
     /**
      * @ORM\Column(type="json")
      */
-    private $data = [];
+    private $data;
 
     /**
      * @ORM\Column(type="boolean")
