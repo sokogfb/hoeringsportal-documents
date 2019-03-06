@@ -128,7 +128,7 @@ class Archiver implements Loggable
             return $configuration;
         }
 
-        if (array_key_exists($key, $configuration)) {
+        if (\array_key_exists($key, $configuration)) {
             return $configuration[$key];
         }
 

@@ -27,7 +27,7 @@ abstract class Entity implements \ArrayAccess, \JsonSerializable
 
     public function __get($name)
     {
-        if (array_key_exists($name, $this->data)) {
+        if (\array_key_exists($name, $this->data)) {
             return $this->data[$name];
         }
 
@@ -41,7 +41,7 @@ abstract class Entity implements \ArrayAccess, \JsonSerializable
 
     public function offsetExists($offset)
     {
-        return array_key_exists($offset, $this->data);
+        return \array_key_exists($offset, $this->data);
     }
 
     public function offsetGet($offset)
