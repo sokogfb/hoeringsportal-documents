@@ -83,14 +83,15 @@ class ArchiveHelper extends AbstractArchiveHelper
                         $caseWorker = null;
                         $organisationReference = null;
                         if (null === $edocHearing) {
-                            $azident = $shareFileResponse->metadata['agent_data']['az'] ?? null;
-                            $caseWorker = $this->edoc->getCaseWorkerByAz($azident);
-                            if (null !== $azident && null === $caseWorker) {
-                                throw new RuntimeException('Unknown case worker '.$azident.' on item '.$shareFileResponse->id);
-                            }
+                            // $azident = $shareFileResponse->metadata['agent_data']['az'] ?? null;
+
+                            // $caseWorker = $this->edoc->getCaseWorkerByAz($azident);
+                            // if (null !== $azident && null === $caseWorker) {
+                            //     throw new RuntimeException('Unknown case worker '.$azident.' on item '.$shareFileResponse->id);
+                            // }
                             $departmentId = $shareFileResponse->metadata['ticket_data']['department_id'] ?? null;
                             $organisationReference = $archiver->getEdocOrganizationReference($departmentId);
-                            if (null !== $departmentId && null === $organisationReference) {
+                            if (null === $organisationReference) {
                                 throw new RuntimeException('Unknown department: '.$departmentId.' on item '.$shareFileResponse->id);
                             }
 
@@ -100,13 +101,11 @@ class ArchiveHelper extends AbstractArchiveHelper
 
                                 $data = [];
                                 if (null !== $caseWorker) {
-                                    $data['CaseWorkerAccountName'] = $caseWorker['CaseWorkerAccountName'];
+                                    $data['CaseFileManagerReference'] = $caseWorker['CaseWorkerId'];
                                 }
                                 if (null !== $organisationReference) {
                                     $data['OrganisationReference'] = $organisationReference;
                                 }
-
-                                // @TODO: Validate that CaseWorker, Organization and PrimaryCode are set (correctly)!
 
                                 $edocHearing = $this->edoc->getHearing($shareFileHearing, true, $data);
                                 if (null === $edocHearing) {
@@ -162,7 +161,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                                 'DocumentVersion' => $fileData,
                             ];
                             if (null !== $caseWorker) {
-                                $data['CaseWorkerAccountName'] = $caseWorker['CaseWorkerAccountName'];
+                                $data['CaseManagerReference'] = $caseWorker['CaseWorkerId'];
                             }
                             if (null !== $organisationReference) {
                                 $data['OrganisationReference'] = $organisationReference;
