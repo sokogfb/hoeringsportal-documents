@@ -81,7 +81,12 @@ class ArchiveHelper extends AbstractArchiveHelper
                 foreach ($shareFileHearing->getChildren() as $shareFileResponse) {
                     try {
                         $caseWorker = null;
-                        $organisationReference = null;
+                        $departmentId = $shareFileResponse->metadata['ticket_data']['department_id'] ?? null;
+                        $organisationReference = $archiver->getEdocOrganizationReference($departmentId);
+                        if (null === $organisationReference) {
+                            throw new RuntimeException('Unknown department: '.$departmentId.' on item '.$shareFileResponse->id);
+                        }
+
                         if (null === $edocHearing) {
                             // $azident = $shareFileResponse->metadata['agent_data']['az'] ?? null;
 
@@ -89,11 +94,6 @@ class ArchiveHelper extends AbstractArchiveHelper
                             // if (null !== $azident && null === $caseWorker) {
                             //     throw new RuntimeException('Unknown case worker '.$azident.' on item '.$shareFileResponse->id);
                             // }
-                            $departmentId = $shareFileResponse->metadata['ticket_data']['department_id'] ?? null;
-                            $organisationReference = $archiver->getEdocOrganizationReference($departmentId);
-                            if (null === $organisationReference) {
-                                throw new RuntimeException('Unknown department: '.$departmentId.' on item '.$shareFileResponse->id);
-                            }
 
                             if ($archiver->getCreateHearing()) {
                                 $this->info('Creating hearing: '.$shareFileHearing->name);
