@@ -134,6 +134,17 @@ easy_admin:
                     - property: updatedAt
                     - property: createdAt
 
+            show:
+                fields:
+                    - property: archiver
+                    - property: caseFileIdentifier
+                      template: admin/Edoc/CaseFile/list/identifier.html.twig
+                    - property: shareFileItemId
+                    - property: updatedAt
+                    - property: createdAt
+                    - property: data
+                      template: admin/Edoc/show/data.html.twig
+
         EdocDocument:
             label: Document
             class: App\Entity\EDoc\Document
@@ -150,3 +161,14 @@ easy_admin:
                     - property: shareFileItemId
                     - property: updatedAt
                     - property: createdAt
+
+            show:
+                fields:
+                    - property: archiver
+                    - property: documentIdentifier
+                      template: admin/Edoc/Document/list/identifier.html.twig
+                    - property: shareFileItemId
+                    - property: updatedAt
+                    - property: createdAt
+                    - property: data
+                      template: admin/Edoc/show/data.html.twig
