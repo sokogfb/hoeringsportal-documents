@@ -69,6 +69,7 @@ easy_admin:
                     - property: enabled
                     - property: lastRunAt
                     - property: configuration
+                      template: admin/Archiver/show/configuration.html.twig
 
         User:
             class: App\Entity\User
