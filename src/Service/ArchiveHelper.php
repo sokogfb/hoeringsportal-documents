@@ -202,9 +202,11 @@ class ArchiveHelper extends AbstractArchiveHelper
                 }
             }
 
-            $archiver->setLastRunAt($startTime);
-            $this->entityManager->persist($archiver);
-            $this->entityManager->flush();
+            if (null === $hearingItemId) {
+                $archiver->setLastRunAt($startTime);
+                $this->entityManager->persist($archiver);
+                $this->entityManager->flush();
+            }
         } catch (\Throwable $t) {
             $this->logException($t);
         }
