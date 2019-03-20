@@ -52,7 +52,7 @@ class ArchiveHelper extends AbstractArchiveHelper
         $this->mailer = $mailer;
     }
 
-    public function archive(Archiver $archiver)
+    public function archive(Archiver $archiver, $hearingItemId = null)
     {
         $this->archiver = $archiver;
 
@@ -71,9 +71,18 @@ class ArchiveHelper extends AbstractArchiveHelper
             $startTime = new \DateTime();
             $date = $archiver->getLastRunAt() ?? new \DateTime('-1 month ago');
 
-            $this->info('Getting files updated since '.$date->format(\DateTime::ATOM).' from ShareFile');
-
-            $shareFileData = $this->shareFile->getUpdatedFiles($date);
+            // @FIXME: Getting data from ShareFile should be moved into a service/helper.
+            if (null !== $hearingItemId) {
+                $this->info('Getting hearing '.$hearingItemId);
+                $hearing = $this->shareFile->getHearing($hearingItemId);
+                $shareFileData = [$hearing];
+            } else {
+                $this->info('Getting files updated since '.$date->format(\DateTime::ATOM).' from ShareFile');
+                $shareFileData = $this->shareFile->getUpdatedFiles($date);
+            }
+            if (empty($shareFileData)) {
+                return;
+            }
 
             foreach ($shareFileData as $shareFileHearing) {
                 $edocHearing = null;
@@ -96,7 +105,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                             // }
 
                             if ($archiver->getCreateHearing()) {
-                                $this->info('Creating hearing: '.$shareFileHearing->name);
+                                $this->info('Getting hearing: '.$shareFileHearing->name);
                                 $shareFileHearing->metadata = $shareFileResponse->metadata;
 
                                 $data = [];
@@ -129,6 +138,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                         $this->info('Getting file contents from ShareFile');
 
                         $sourceFile = null;
+                        $sourceFileCreatedAt = null;
                         $sourceFileType = null;
                         $pattern = $this->archiver->getConfigurationValue('[edoc][sharefile_file_name_pattern]');
                         if (null !== $pattern) {
@@ -136,6 +146,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                             foreach ($files as $file) {
                                 if (fnmatch($pattern, $file['Name'])) {
                                     $sourceFile = $file;
+                                    $sourceFileCreatedAt = $file->creationDate;
                                     $sourceFileType = $this->archiver->getConfigurationValue('[edoc][sharefile_file_type]');
                                 }
                             }
@@ -144,6 +155,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                             }
                         } else {
                             $sourceFile = $shareFileResponse;
+                            $sourceFileCreatedAt = $shareFileResponse->creationDate;
                             $sourceFileType = ArchiveFormat::ZIP;
                         }
                         $fileContents = $this->shareFile->downloadFile($sourceFile);
@@ -169,9 +181,17 @@ class ArchiveHelper extends AbstractArchiveHelper
 
                             $edocResponse = $this->edoc->createResponse($edocHearing, $shareFileResponse, $data);
                         } else {
-                            $this->info('Updating document in eDoc');
-                            // @TODO: Check that file actually is newer than the one stored in eDoc.
-                            $edocResponse = $this->edoc->updateResponse($edocResponse, $shareFileResponse, $fileData);
+                            $documentUpdatedAt = $this->edoc->getDocumentUpdatedAt($edocResponse);
+                            if ($documentUpdatedAt < $sourceFileCreatedAt) {
+                                $this->info('Updating document in eDoc');
+                                $edocResponse = $this->edoc->updateResponse(
+                                    $edocResponse,
+                                    $shareFileResponse,
+                                    $fileData
+                                );
+                            } else {
+                                $this->info('Document in eDoc is already up to date');
+                            }
                         }
                         if (null === $edocResponse) {
                             throw new RuntimeException('Error creating response: '.$shareFileResponse['Name']);

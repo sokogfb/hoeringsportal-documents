@@ -163,6 +163,16 @@ class EdocService
         return $this->createResponse($hearing, $item, $data);
     }
 
+    public function getDocumentUpdatedAt(Document $document)
+    {
+        $document = $this->documentRepository->findOneBy([
+            'documentIdentifier' => $document->DocumentIdentifier,
+            'archiver' => $this->archiver,
+        ]);
+
+        return $document ? $document->getUpdatedAt() : null;
+    }
+
     /**
      * Create a hearing response.
      *

@@ -86,6 +86,19 @@ class ShareFileService
         return $this->construct(Item::class, $hearings);
     }
 
+    public function getHearing($itemId)
+    {
+        $hearing = $this->getItem($itemId);
+        $responses = $this->getResponses($hearing);
+        foreach ($responses as &$response) {
+            $files = $this->getFiles($response);
+            $response->setChildren($files);
+        }
+        $hearing->setChildren($responses);
+
+        return $hearing;
+    }
+
     /**
      * @param Item           $hearing
      * @param null|\DateTime $changedAfter
