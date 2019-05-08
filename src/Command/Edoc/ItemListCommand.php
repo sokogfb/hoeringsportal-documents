@@ -3,7 +3,7 @@
 /*
  * This file is part of hoeringsportal-sync-files.
  *
- * (c) 2018 ITK Development
+ * (c) 2018–2019 ITK Development
  *
  * This source file is subject to the MIT license.
  */
