@@ -1,0 +1,10 @@
+{% extends 'form_base.html.twig' %}
+{% import 'form_base.html.twig' as self %}
+
+{% block content_title 'Combine pdf – Select hearing'| trans %}
+
+{% block form_header %}
+    {{ self.value_row('Archiver', archiver.name, {change: {url: path('pdf_combine_step_0')}}) }}
+
+    {{ parent() }}
+{% endblock %}

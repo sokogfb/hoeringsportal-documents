@@ -368,7 +368,7 @@ class ShareFileService
     private function client()
     {
         if (null === $this->client) {
-            $this->client = new Client(
+            $this->client = new ShareFileClient(
                 $this->configuration['hostname'],
                 $this->configuration['client_id'],
                 $this->configuration['secret'],

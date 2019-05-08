@@ -1,0 +1,42 @@
+{% extends '@EasyAdmin/default/layout.html.twig' %}
+
+{% macro value_row(label, value, options = {}) %}
+    <div class="form-group">
+        <label>{{ label|trans }}</label>
+        <div class="form-widget">
+            <div class="input-group">
+                <span class="form-control">{{ value }}</span>
+
+                {% if options.change.url|default(false) %}
+                    <div class="input-group-append">
+                        <a class="input-group-text" href="{{ options.change.url }}">{{ (options.change.label|default('Change'))|trans }}</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% block main %}
+    {% form_theme form '@EasyAdmin/form/bootstrap_4.html.twig' %}
+
+    {% block form %}
+        {{ form_start(form) }}
+            {% block form_header %}{% endblock %}
+            {% for key, value in form %}
+                {% if 'submit' != key %}
+                    {{ form_row(form[key]) }}
+                {% endif %}
+            {% endfor %}
+
+            <div class="form-group">
+                <label class="form-control-label"></label>
+                <div class="form-widget">
+                    <div class="form_control">
+                        {{ form_widget(form.submit) }}
+                    </div>
+                </div>
+            </div>
+        {{ form_end(form) }}
+    {% endblock %}
+{% endblock %}
