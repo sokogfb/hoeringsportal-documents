@@ -161,7 +161,7 @@ class AdminController extends EasyAdminController
 
         $responses = [];
         $files = [];
-        $fileNamePattern = '*-internal.pdf';
+        $fileNamePattern = '*-offentlig*.pdf';
 
         foreach ($allResponses as $response) {
             if (\in_array($response->getId(), $selectedReponseIds, true)) {

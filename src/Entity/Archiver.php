@@ -23,7 +23,7 @@ use Symfony\Component\Yaml\Yaml;
  * @Gedmo\Loggable()
  * @UniqueEntity("name")
  */
-class Archiver implements Loggable
+class Archiver implements Loggable, \JsonSerializable
 {
     use TimestampableEntity;
 
@@ -168,5 +168,14 @@ class Archiver implements Loggable
         $this->type = $type;
 
         return $this;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'configuration' => $this->getConfigurationValue(),
+        ];
     }
 }

@@ -158,6 +158,12 @@
     "monolog/monolog": {
         "version": "1.23.0"
     },
+    "mpdf/mpdf": {
+        "version": "v8.0.1"
+    },
+    "myclabs/deep-copy": {
+        "version": "1.9.1"
+    },
     "nelmio/cors-bundle": {
         "version": "1.5",
         "recipe": {
@@ -223,6 +229,9 @@
             "version": "5.2",
             "ref": "fb7e19da7f013d0d422fa9bce16f5c510e27609b"
         }
+    },
+    "setasign/fpdi": {
+        "version": "v2.2.0"
     },
     "stof/doctrine-extensions-bundle": {
         "version": "1.2",

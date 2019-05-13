@@ -13,6 +13,7 @@
         "itk-dev/database-bundle": "^1.2",
         "itk-dev/edoc-api": "dev-master",
         "kapersoft/sharefile-api": "dev-deltag.aarhus.dk",
+        "mpdf/mpdf": "^8.0",
         "opis/json-schema": "^1.0",
         "sensio/framework-extra-bundle": "^5.1",
         "stof/doctrine-extensions-bundle": "^1.3",

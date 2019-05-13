@@ -86,6 +86,24 @@ class ShareFileService
         return $this->construct(Item::class, $hearings);
     }
 
+    public function findHearing($name)
+    {
+        $itemId = $this->configuration['root_id'];
+
+        $result = $this->client()->getChildren(
+            $itemId,
+            [
+                '$filter' => 'Name eq \''.str_replace('\'', '\\\'', $name).'\'',
+            ]
+        );
+
+        if (!isset($result['value']) || 1 !== \count($result['value'])) {
+            throw new \RuntimeException('Invalid hearing: '.$name);
+        }
+
+        return new Item(reset($result['value']));
+    }
+
     public function getHearing($itemId)
     {
         $hearing = $this->getItem($itemId);

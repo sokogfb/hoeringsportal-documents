@@ -35,6 +35,11 @@ class Item extends Entity
         return $this->id;
     }
 
+    public function getName()
+    {
+        return $this->name;
+    }
+
     public function setChildren(array $children)
     {
         $this->children = $children;
