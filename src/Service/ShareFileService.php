@@ -243,6 +243,29 @@ class ShareFileService
         return $this->client()->getItemContents($itemId);
     }
 
+    public function uploadFile(string $filename, string $folderId, bool $unzip = false, bool $overwrite = true, bool $notify = true)
+    {
+        $result = $this->client()->uploadFileStandard($filename, $folderId, $unzip, $overwrite, $notify);
+
+        return $result;
+    }
+
+    public function findFile(string $filename, string $folderId)
+    {
+        $result = $this->client()->getChildren(
+            $folderId,
+            [
+                '$filter' => 'Name eq \''.str_replace('\'', '\\\'', $filename).'\'',
+            ]
+        );
+
+        if (!isset($result['value']) || 1 !== \count($result['value'])) {
+            throw new \RuntimeException(sprintf('No such file %s in folder %s', $filename, $folderId));
+        }
+
+        return new Item(reset($result['value']));
+    }
+
     /**
      * @param Item[]          $hearings
      * @param OutputInterface $output

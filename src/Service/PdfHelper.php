@@ -100,7 +100,31 @@ class PdfHelper
 
     public function share($hearingId)
     {
-        throw new \RuntimeException(__METHOD__.' is not implemented!');
+        $data = $this->getHearingData($hearingId);
+        $archiver = $this->getArchiver($data);
+        $this->shareFileService->setArchiver($archiver);
+        $filename = $this->getDataFilename($hearingId, '-combined.pdf');
+        if (!$this->filesystem->exists($filename)) {
+            throw new \RuntimeException('Cannot find file to share for hearing '.$hearingId);
+        }
+
+        $parentId = $this->getHearingValue($data, 'Id');
+
+        $this->debug(sprintf('Sharing file %s to %s', $filename, $parentId));
+
+        $result = $this->shareFileService->uploadFile($filename, $parentId);
+
+        if ('OK' !== $result) {
+            throw new \RuntimeException('Error uploading file: '.$filename);
+        }
+
+        try {
+            $result = $this->shareFileService->findFile(basename($filename), $parentId);
+        } catch (\Exception $e) {
+            throw new \RuntimeException(sprintf('Cannot get shared file %s in %s', $filename, $parentId));
+        }
+
+        return $result;
     }
 
     public function archive($hearingId)
@@ -232,7 +256,15 @@ class PdfHelper
 
     private function getHearingValue(array $data, $key = null)
     {
-        return null !== $key ? $data['hearing'][$key] : $data['hearing'];
+        if (null !== $key) {
+            if (!isset($data['hearing'][$key])) {
+                throw new \OutOfBoundsException('No such key: '.$key);
+            }
+
+            return $data['hearing'][$key];
+        }
+
+        return $data['hearing'];
     }
 
     private function combineFiles(array $data, string $directory)
