@@ -19,6 +19,7 @@ use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Templating\EngineInterface;
 
 class PdfHelper
 {
@@ -33,14 +34,23 @@ class PdfHelper
     /** @var Filesystem */
     private $filesystem;
 
+    /** @var \Twig */
+    private $twig;
+
     /** @var ParameterBagInterface */
     private $params;
 
-    public function __construct(ArchiverRepository $archiverRepository, ShareFileService $shareFileService, Filesystem $filesystem, ParameterBagInterface $params)
-    {
+    public function __construct(
+        ArchiverRepository $archiverRepository,
+        ShareFileService $shareFileService,
+        Filesystem $filesystem,
+        EngineInterface $twig,
+        ParameterBagInterface $params
+    ) {
         $this->archiverRepository = $archiverRepository;
         $this->shareFileService = $shareFileService;
         $this->filesystem = $filesystem;
+        $this->twig = $twig;
         $this->params = $params;
     }
 
@@ -77,6 +87,18 @@ class PdfHelper
         });
 
         $filename = $this->getDataFilename($hearingId);
+
+        // Build hearing metadata.
+        $hearing = json_decode(json_encode($hearing), true);
+        $firstResponse = reset($responses);
+        if ($firstResponse) {
+            $metadata = $firstResponse->metadata;
+            $hearing['_metadata'] = [
+                'hearing_url' => 'https://deltag.aarhus.dk/node/'.preg_replace('/^[^\d]+/', '', $hearingId),
+                'hearing_name' => $metadata['ticket_data']['hearing_name'] ?? null,
+                'department_title' => $metadata['ticket_data']['department_title'] ?? null,
+            ];
+        }
 
         $this->debug('Writing datafile '.$filename);
         $this->filesystem->dumpFile($filename, json_encode([
@@ -275,6 +297,8 @@ class PdfHelper
 
         // @TODO Generate front page
         $this->debug('Generating front page');
+        $frontPage = $this->generateFrontpage($data);
+        $mpdf->WriteHTML($frontPage);
 
         $this->debug('Adding table of contents');
         $mpdf->TOCpagebreakByArray([
@@ -376,5 +400,12 @@ class PdfHelper
             array_column($responses, 'id'),
             $responses
         );
+    }
+
+    private function generateFrontPage(array $data)
+    {
+        $template = 'pdf/frontpage.html.twig';
+
+        return $this->twig->render($template, $data);
     }
 }
