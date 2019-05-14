@@ -56,7 +56,8 @@ easy_admin:
                       type: choice
                       type_options:
                           choices:
-                              sharefile2edoc: sharefile2edoc
+                              sharefile2edoc: !php/const App\Entity\Archiver::TYPE_SHAREFILE2EDOC
+                              pdfcombine: !php/const App\Entity\Archiver::TYPE_PDF_COMBINE
 
                     - property: enabled
                     - property: configuration

@@ -22,8 +22,18 @@ information on what's going on.
 ## Combine PDF
 
 ```sh
-bin/console -vvv app:pdf:build get-data archiver-id hearing-id # Get data from ShareFile
-bin/console -vvv app:pdf:build combine hearing-id              # Build combined pdf
-bin/console -vvv app:pdf:build share hearing-id                # Upload combined pdf to ShareFile
-bin/console -vvv app:pdf:build archive hearing-id              # Archive combined pdf in eDoc
+bin/console -vvv app:pdf:combine get-data hearing-id --archiver=archiver-id # Get data from ShareFile
+bin/console -vvv app:pdf:combine combine hearing-id  # Build combined pdf
+bin/console -vvv app:pdf:combine share hearing-id    # Upload combined pdf to ShareFile
+bin/console -vvv app:pdf:combine archive hearing-id  # Archive combined pdf in eDoc
+```
+
+If an archiver is not specified, the first default archiver will be used.
+
+### Cron job
+
+Run this command regularly to combine PDFs from finished hearings:
+
+```sh
+bin/console  -vvv app:pdf:cron archiver-id
 ```

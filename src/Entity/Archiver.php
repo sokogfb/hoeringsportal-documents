@@ -26,6 +26,8 @@ use Symfony\Component\Yaml\Yaml;
 class Archiver implements Loggable, \JsonSerializable
 {
     use TimestampableEntity;
+    public const TYPE_SHAREFILE2EDOC = 'sharefile2edoc';
+    public const TYPE_PDF_COMBINE = 'pdfcombine';
 
     /**
      * @ORM\Id()

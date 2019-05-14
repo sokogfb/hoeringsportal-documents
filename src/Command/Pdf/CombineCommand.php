@@ -14,14 +14,16 @@ use App\Repository\ArchiverRepository;
 use App\Service\PdfHelper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class BuildCommand extends Command
+class CombineCommand extends Command
 {
-    protected static $defaultName = 'app:pdf:build';
+    protected static $defaultName = 'app:pdf:combine';
 
     /** @var PdfHelper */
     private $helper;
@@ -30,28 +32,41 @@ class BuildCommand extends Command
     {
         parent::__construct();
         $this->helper = $pdfHelper;
+        $this->archiverRepository = $archiverRepository;
     }
 
     public function configure()
     {
-        $this->addArgument('args', InputArgument::REQUIRED | InputArgument::IS_ARRAY);
+        $this
+            ->addArgument('action', InputArgument::REQUIRED)
+            ->addArgument('hearing', InputArgument::REQUIRED)
+            ->addOption('archiver', null, InputOption::VALUE_REQUIRED);
     }
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $this->helper->setLogger(new ConsoleLogger($output));
 
-        $args = $input->getArgument('args');
-        $cmd = array_shift($args);
-        $method = $this->getCommandName($cmd);
+        $action = $input->getArgument('action');
+        $hearing = $input->getArgument('hearing');
+        $method = $this->getCommandName($action);
+
+        if ($archiverId = $input->getOption('archiver')) {
+            $archiver = $this->archiverRepository->findOneByNameOrId($archiverId);
+            if (null === $archiver) {
+                throw new RuntimeException('Invalid archiver: '.$archiverId);
+            }
+            $this->helper->setArchiver($archiver);
+        }
 
         if (!method_exists($this->helper, $method)) {
-            throw new InvalidArgumentException('Invalid command: '.$cmd);
+            throw new InvalidArgumentException('Invalid command: '.$action);
         }
-        $result = \call_user_func_array([$this->helper, $method], $args);
+
+        $result = \call_user_func_array([$this->helper, $method], [$hearing]);
 
         if ($output->isDebug()) {
-            $output->writeln(json_encode([$cmd => $result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $output->writeln(json_encode([$action => $result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         }
     }
 

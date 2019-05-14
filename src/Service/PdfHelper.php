@@ -11,10 +11,15 @@
 namespace App\Service;
 
 use App\Entity\Archiver;
+use App\Entity\ExceptionLogEntry;
 use App\Repository\ArchiverRepository;
 use App\ShareFile\Item;
+use App\Util\ArchiverAwareTrait;
+use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Client;
 use Mpdf\Mpdf;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerTrait;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
@@ -24,6 +29,8 @@ use Symfony\Component\Templating\EngineInterface;
 class PdfHelper
 {
     use LoggerAwareTrait;
+    use LoggerTrait;
+    use ArchiverAwareTrait;
 
     /** @var ArchiverRepository */
     private $archiverRepository;
@@ -37,6 +44,12 @@ class PdfHelper
     /** @var \Twig */
     private $twig;
 
+    /** @var EntityManagerInterface */
+    private $entityManager;
+
+    /** @var \Swift_Mailer */
+    private $mailer;
+
     /** @var ParameterBagInterface */
     private $params;
 
@@ -45,22 +58,42 @@ class PdfHelper
         ShareFileService $shareFileService,
         Filesystem $filesystem,
         EngineInterface $twig,
+        EntityManagerInterface $entityManager,
+        \Swift_Mailer $mailer,
         ParameterBagInterface $params
     ) {
         $this->archiverRepository = $archiverRepository;
         $this->shareFileService = $shareFileService;
         $this->filesystem = $filesystem;
         $this->twig = $twig;
+        $this->entityManager = $entityManager;
+        $this->mailer = $mailer;
         $this->params = $params;
     }
 
-    public function getData($archiverId, $hearingId)
+    public function process()
     {
-        $this->debug('Getting archiver');
-        $archiver = $this->getArchiver($archiverId);
-        $this->shareFileService->setArchiver($archiver);
-        $this->debug('Getting hearing');
+        try {
+            $hearings = $this->getFinishedHearings();
+            foreach ($hearings as $hearing) {
+                $hearingId = 'H'.$hearing['hearing_id'];
+                $this->getData($hearingId, $hearing);
+                $this->combine($hearingId);
+                $this->share($hearingId);
+            }
+        } catch (\Throwable $t) {
+            $this->logException($t);
+        }
+    }
+
+    public function getData($hearingId, array $metadata = null)
+    {
+        if (null === $this->getArchiver()) {
+            throw new \RuntimeException('No archiver');
+        }
+        $this->debug('Getting hearing '.$hearingId);
         $hearing = $this->shareFileService->findHearing($hearingId);
+        $hearing->metadata['api_data'] = $metadata;
         $this->debug('Getting responses');
         $responses = $this->getResponses($hearing);
 
@@ -90,19 +123,14 @@ class PdfHelper
 
         // Build hearing metadata.
         $hearing = json_decode(json_encode($hearing), true);
-        $firstResponse = reset($responses);
-        if ($firstResponse) {
-            $metadata = $firstResponse->metadata;
-            $hearing['_metadata'] = [
-                'hearing_url' => 'https://deltag.aarhus.dk/node/'.preg_replace('/^[^\d]+/', '', $hearingId),
-                'hearing_name' => $metadata['ticket_data']['hearing_name'] ?? null,
-                'department_title' => $metadata['ticket_data']['department_title'] ?? null,
-            ];
+        if (null === $metadata) {
+            $metadata = $this->getHearing($hearingId);
         }
+        $hearing['_metadata'] = $metadata;
 
         $this->debug('Writing datafile '.$filename);
         $this->filesystem->dumpFile($filename, json_encode([
-            'archiver' => $archiver,
+            'archiver' => $this->getArchiver(),
             'hearing' => $hearing,
             'responses' => $responses,
             'files' => $files,
@@ -114,7 +142,7 @@ class PdfHelper
     public function combine($hearingId)
     {
         $data = $this->getHearingData($hearingId);
-        $archiver = $this->getArchiver($data);
+        $archiver = $this->loadArchiver($data);
         $this->shareFileService->setArchiver($archiver);
 
         return $this->buildCombinedPdf($data);
@@ -123,7 +151,7 @@ class PdfHelper
     public function share($hearingId)
     {
         $data = $this->getHearingData($hearingId);
-        $archiver = $this->getArchiver($data);
+        $archiver = $this->loadArchiver($data);
         $this->shareFileService->setArchiver($archiver);
         $filename = $this->getDataFilename($hearingId, '-combined.pdf');
         if (!$this->filesystem->exists($filename)) {
@@ -170,6 +198,13 @@ class PdfHelper
         $this->shareFileService->setArchiver($archiver);
     }
 
+    public function log($level, $message, array $context = [])
+    {
+        if (null !== $this->logger) {
+            $this->logger->log($level, $message, $context);
+        }
+    }
+
     /**
      * Get data filename.
      *
@@ -199,16 +234,16 @@ class PdfHelper
         return json_decode($data, true);
     }
 
-    private function getArchiver($id)
+    private function loadArchiver($id)
     {
         if (isset($id['archiver']['id'])) {
             $id = $id['archiver']['id'];
         }
 
-        $archiver = $this->archiverRepository->find($id) ?? $this->archiverRepository->findOneBy(['name' => $id]);
+        $archiver = $this->archiverRepository->findOneByNameOrId($id);
 
         if (null === $archiver) {
-            throw new \RuntimeException('Invalid archiver: '.$archiverId);
+            throw new \RuntimeException('Invalid archiver: '.$id);
         }
 
         return $archiver;
@@ -242,19 +277,34 @@ class PdfHelper
                     $fileMtime = new \DateTime();
                     $fileMtime->setTimestamp(filemtime($filename));
                     if ($fileMtime > $itemCreationTime) {
-                        $this->debug(sprintf('% 4d/%d File %s already downloaded (%s)', $index, \count($data['files']), $item->getId(), $filename));
+                        $this->debug(sprintf(
+                            '% 4d/%d File %s already downloaded (%s)',
+                            $index,
+                            \count($data['files']),
+                            $item->getId(),
+                            $filename
+                        ));
 
                         continue;
                     }
                 }
-                $this->debug(sprintf('% 4d/%d Downloading file %s (%s)', $index, \count($data['files']), $item->getId(), $filename));
+                $this->debug(sprintf(
+                    '% 4d/%d Downloading file %s (%s)',
+                    $index,
+                    \count($data['files']),
+                    $item->getId(),
+                    $filename
+                ));
                 $contents = $this->shareFileService->downloadFile($item);
                 $this->filesystem->dumpFile($filename, $contents);
             }
 
             return rtrim($dirname, '/');
         } catch (IOExceptionInterface $exception) {
-            $this->log(LogLevel::EMERGENCY, 'An error occurred while creating your directory at '.$exception->getPath());
+            $this->log(
+                LogLevel::EMERGENCY,
+                'An error occurred while creating your directory at '.$exception->getPath()
+            );
         }
     }
 
@@ -295,7 +345,6 @@ class PdfHelper
 
         $mpdf = new Mpdf();
 
-        // @TODO Generate front page
         $this->debug('Generating front page');
         $frontPage = $this->generateFrontpage($data);
         $mpdf->WriteHTML($frontPage);
@@ -321,7 +370,7 @@ class PdfHelper
         <td width="50%" style="text-align: right">{PAGENO}/{nbpg}</td>
     </tr>
 </table>'
-);
+        );
 
         $index = 0;
         foreach ($data['responses'] as $response) {
@@ -407,5 +456,81 @@ class PdfHelper
         $template = 'pdf/frontpage.html.twig';
 
         return $this->twig->render($template, $data);
+    }
+
+    private function logException(\Throwable $t)
+    {
+        $this->emergency($t->getMessage());
+        $logEntry = new ExceptionLogEntry($t);
+        $this->entityManager->persist($logEntry);
+        $this->entityManager->flush();
+
+        if (null !== $this->archiver) {
+            $config = $this->archiver->getConfigurationValue('[notifications][email]');
+
+            if ($config) {
+                $message = (new \Swift_Message($t->getMessage()))
+                    ->setFrom($config['from'])
+                    ->setTo($config['to'])
+                    ->setBody(
+                        $t->getTraceAsString(),
+                        'text/plain'
+                    );
+
+                $this->mailer->send($message);
+            }
+        }
+    }
+
+    private function getHearings()
+    {
+        $config = $this->archiver->getConfigurationValue('hearings');
+        if (!isset($config['api_url'])) {
+            throw new RuntimeException('Missing hearings api url');
+        }
+
+        $client = new Client();
+        $response = $client->get($config['api_url']);
+        $data = json_decode((string) $response->getBody(), true);
+
+        $hearings = array_map(function ($feature) {
+            return $feature['properties'];
+        }, $data['features']);
+
+        return $hearings;
+    }
+
+    private function getFinishedHearings()
+    {
+        $hearings = $this->getHearings();
+
+        $to = new \DateTime();
+        $from = $this->archiver->getLastRunAt() ?? new \DateTime('2001-01-01');
+
+        // Get hearings finished since last run.
+        $hearings = array_filter(
+            $hearings,
+            function ($hearing) use ($from, $to) {
+                $deadline = new \DateTime($hearing['hearing_reply_deadline']);
+
+                return $from <= $deadline && $deadline < $to;
+            }
+        );
+
+        return $hearings;
+    }
+
+    private function getHearing($hearingId)
+    {
+        $hearings = $this->getHearings();
+        $id = (int) preg_replace('/^[^\d]+/', '', $hearingId);
+
+        foreach ($hearings as $hearing) {
+            if ($id === $hearing['hearing_id']) {
+                return $hearing;
+            }
+        }
+
+        return null;
     }
 }
