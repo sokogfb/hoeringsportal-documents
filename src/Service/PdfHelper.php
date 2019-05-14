@@ -100,7 +100,7 @@ class PdfHelper
         $this->debug('Getting file data');
         // Pdf files indexed by response id.
         $files = [];
-        $fileNamePattern = '*-offentlig*.pdf';
+        $fileNamePattern = $this->archiver->getConfigurationValue('[file_name_pattern]', '*-offentlig*.pdf');
 
         foreach ($responses as $response) {
             $responseFiles = $this->shareFileService->getFiles($response);
