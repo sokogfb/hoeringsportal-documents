@@ -73,13 +73,21 @@ class PdfHelper
 
     public function process()
     {
+        if (null === $this->getArchiver()) {
+            throw new \RuntimeException('No archiver');
+        }
+
         try {
             $hearings = $this->getFinishedHearings();
             foreach ($hearings as $hearing) {
-                $hearingId = 'H'.$hearing['hearing_id'];
-                $this->getData($hearingId, $hearing);
-                $this->combine($hearingId);
-                $this->share($hearingId);
+                try {
+                    $hearingId = 'H'.$hearing['hearing_id'];
+                    $this->getData($hearingId, $hearing);
+                    $this->combine($hearingId);
+                    $this->share($hearingId);
+                } catch (\Throwable $t) {
+                    $this->logException($t);
+                }
             }
         } catch (\Throwable $t) {
             $this->logException($t);
@@ -381,7 +389,7 @@ class PdfHelper
                 continue;
             }
 
-            $pagecount = $mpdf->SetSourceFile($filename);
+            $pagecount = $mpdf->setSourceFile($filename);
             $this->debug(sprintf('% 4d/%d Adding file %s', $index, \count($data['responses']), $filename));
 
             for ($p = 1; $p <= $pagecount; ++$p) {
@@ -398,7 +406,7 @@ class PdfHelper
                     $mpdf->TOC_Entry($response->getName() ?? $response->getId(), 0);
                 }
 
-                $mpdf->UseTemplate($tplId);
+                $mpdf->useTemplate($tplId);
             }
         }
 
