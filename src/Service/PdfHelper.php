@@ -462,6 +462,10 @@ class PdfHelper
     private function generateFrontPage(array $data)
     {
         $template = 'pdf/frontpage.html.twig';
+        $data['context'] = [
+            'template_dir' => $this->params->get('kernel.project_dir').'/templates/pdf',
+            'template_base_url' => 'file://' . $this->params->get('kernel.project_dir').'/templates/pdf',
+        ];
 
         return $this->twig->render($template, $data);
     }
