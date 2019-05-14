@@ -359,6 +359,12 @@ class PdfHelper
 
         $this->debug('Adding table of contents');
         $mpdf->TOCpagebreakByArray([
+            'name' => 'organization',
+            'links' => true,
+        ]);
+
+        $mpdf->TOCpagebreakByArray([
+            'name' => 'private',
             'links' => true,
         ]);
 
@@ -381,6 +387,7 @@ class PdfHelper
         );
 
         $index = 0;
+        $tocGroup = null;
         foreach ($data['responses'] as $response) {
             ++$index;
             $response = new Item($response);
@@ -403,7 +410,27 @@ class PdfHelper
                     ]);
                 }
                 if (1 === $p) {
-                    $mpdf->TOC_Entry($response->getName() ?? $response->getId(), 0);
+                    $title = $response->getName() ?? $response->getId();
+
+                    if (isset($response['_metadata']['user_data']['name'])) {
+                        $title = $response['_metadata']['user_data']['name'];
+
+                        if (isset($response['_metadata']['ticket_data']['on_behalf_organization'])) {
+                            $title .= ' (på vegne af ' . $response['_metadata']['ticket_data']['on_behalf_organization'] .')';
+                        }
+                    }
+
+                    if (isset($response['_metadata']['ticket_data']['on_behalf_organization'])) {
+                        if (null === $tocGroup) {
+                            $tocGroup = 'organization';
+                            $mpdf->TOC_Entry('Organisationer', 0, $tocGroup);
+                        }
+                    } else if ('organization' === $tocGroup) {
+                        $tocGroup = 'private';
+                        $mpdf->TOC_Entry('Privatpersoner', 0, $tocGroup);
+                    }
+
+                    $mpdf->TOC_Entry($title, 1, isset($response['_metadata']['ticket_data']['on_behalf_organization']) ? 'organization' : 'private');
                 }
 
                 $mpdf->useTemplate($tplId);
@@ -451,6 +478,8 @@ class PdfHelper
         usort($persons, function (Item $a, Item $b) {
             return strcmp($a->creationDate, $b->creationDate);
         });
+
+        $responses = array_merge($organizations, $persons);
 
         // Index by item id.
         return array_combine(
