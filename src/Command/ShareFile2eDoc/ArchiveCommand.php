@@ -11,6 +11,7 @@
 namespace App\Command\ShareFile2eDoc;
 
 use App\Command\Command;
+use App\Entity\Archiver;
 use App\Service\ArchiveHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -19,6 +20,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ArchiveCommand extends Command
 {
+    protected $archiverType = Archiver::TYPE_SHAREFILE2EDOC;
+
     /** @var ArchiveHelper */
     private $helper;
 
