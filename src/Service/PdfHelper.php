@@ -358,33 +358,20 @@ class PdfHelper
         $mpdf->WriteHTML($frontPage);
 
         $this->debug('Adding table of contents');
-        $mpdf->TOCpagebreakByArray([
-            'name' => 'organization',
-            'links' => true,
-        ]);
 
-        $mpdf->TOCpagebreakByArray([
-            'name' => 'private',
-            'links' => true,
-        ]);
+        if (!empty(array_filter($data['responses'], [$this, 'isOrganizationResponse']))) {
+            $mpdf->TOCpagebreakByArray([
+                'name' => 'organization',
+                'links' => true,
+            ]);
+        }
 
-//         $mpdf->SetHTMLHeader('
-        // <table width="100%">
-//     <tr>
-//         <td width="100%">'.$hearing['title'].'</td>
-//     </tr>
-        // </table>'
-        // );
-
-        $mpdf->SetHTMLFooter(
-            '
-<table width="100%">
-    <tr>
-        <td width="50%">{DATE Y-m-d}</td>
-        <td width="50%" style="text-align: right">{PAGENO}/{nbpg}</td>
-    </tr>
-</table>'
-        );
+        if (!empty(array_filter($data['responses'], [$this, 'isPrivateResponse']))) {
+            $mpdf->TOCpagebreakByArray([
+                'name' => 'private',
+                'links' => true,
+            ]);
+        }
 
         $index = 0;
         $tocGroup = null;
@@ -406,7 +393,8 @@ class PdfHelper
                 if ($index > 1 || $p > 1) {
                     $mpdf->AddPageByArray([
                         'orientation' => $size['width'] > $size['height'] ? 'L' : 'P',
-                        'newformat' => [$size['width'], $size['height']],
+                        // Make room for page footer.
+                        'sheet-size' => [$size['width'], $size['height'] + 20],
                     ]);
                 }
                 if (1 === $p) {
@@ -415,12 +403,12 @@ class PdfHelper
                     if (isset($response['_metadata']['user_data']['name'])) {
                         $title = $response['_metadata']['user_data']['name'];
 
-                        if (isset($response['_metadata']['ticket_data']['on_behalf_organization'])) {
+                        if ($this->isOrganizationResponse($response)) {
                             $title .= ' (på vegne af '.$response['_metadata']['ticket_data']['on_behalf_organization'].')';
                         }
                     }
 
-                    if (isset($response['_metadata']['ticket_data']['on_behalf_organization'])) {
+                    if ($this->isOrganizationResponse($response)) {
                         if (null === $tocGroup) {
                             $tocGroup = 'organization';
                             $mpdf->TOC_Entry('Organisationer', 0, $tocGroup);
@@ -430,7 +418,7 @@ class PdfHelper
                         $mpdf->TOC_Entry('Privatpersoner', 0, $tocGroup);
                     }
 
-                    $mpdf->TOC_Entry($title, 1, isset($response['_metadata']['ticket_data']['on_behalf_organization']) ? 'organization' : 'private');
+                    $mpdf->TOC_Entry($title, 1, $this->isOrganizationResponse($response) ? 'organization' : 'private');
                 }
 
                 $mpdf->useTemplate($tplId);
@@ -465,12 +453,8 @@ class PdfHelper
         $responses = $this->shareFileService->getResponses($hearing);
 
         // Split into organizations and persons.
-        $organizations = array_filter($responses, function (Item $item) {
-            return isset($item->metadata['ticket_data']['on_behalf_organization']);
-        });
-        $persons = array_filter($responses, function (Item $item) {
-            return !isset($item->metadata['ticket_data']['on_behalf_organization']);
-        });
+        $organizations = array_filter($responses, [$this, 'isOrganizationResponse']);
+        $persons = array_filter($responses, [$this, 'isPrivateResponse']);
         // Sort by creation time.
         usort($organizations, function (Item $a, Item $b) {
             return strcmp($a->creationDate, $b->creationDate);
@@ -486,6 +470,22 @@ class PdfHelper
             array_column($responses, 'id'),
             $responses
         );
+    }
+
+    private function isOrganizationResponse($response)
+    {
+        if (\is_array($response)) {
+            return isset($response['_metadata']['ticket_data']['on_behalf_organization']);
+        } elseif ($response instanceof Item) {
+            return isset($response->metadata['ticket_data']['on_behalf_organization']);
+        }
+
+        return false;
+    }
+
+    private function isPrivateResponse($response)
+    {
+        return !$this->isOrganizationResponse($response);
     }
 
     private function generateFrontPage(array $data)

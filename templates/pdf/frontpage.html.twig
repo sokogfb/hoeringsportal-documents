@@ -1,12 +1,7 @@
 <style>
     @page {
-        margin: 38mm 25mm;
-        /*
-        background-image: url({{ context.template_dir }}/assets/aak_02_venstre_70_store.jpg);
-        background-repeat: no-repeat;
-        background-size: 25%;
-        background-position: 2cm 2cm;
-        */
+        margin: 38mm 25mm 20mm 25mm;
+        footer: html_page_footer;
     }
 
     .frontpage {
@@ -65,6 +60,12 @@
     }
 </style>
 
+<htmlpagefooter name="page_footer" style="display:none">
+    <div style="text-align: right; font-size: 10pt; background: #fff;">
+        {PAGENO}/{nbpg}
+    </div>
+</htmlpagefooter>
+
 <div class="frontpage">
     {% set metadata = hearing._metadata|default({}) %}
     <div style="text-align: right">
@@ -93,11 +94,11 @@
     <table>
         <tr>
             <th>Start på høring</th>
-            <td>{{ metadata.hearing_start_date|date('m/d/Y H:i') }}</td>
+            <td>{{ metadata.hearing_start_date|date('d/m/Y') }}</td>
         </tr>
         <tr>
             <th>Høringsfrist</th>
-            <td>{{ metadata.hearing_reply_deadline|date('m/d/Y H:i') }}</td>
+            <td>{{ metadata.hearing_reply_deadline|date('d/m/Y') }}</td>
         </tr>
         <tr>
             <th>Antal høringssvar</th>
