@@ -416,7 +416,7 @@ class PdfHelper
                         $title = $response['_metadata']['user_data']['name'];
 
                         if (isset($response['_metadata']['ticket_data']['on_behalf_organization'])) {
-                            $title .= ' (på vegne af ' . $response['_metadata']['ticket_data']['on_behalf_organization'] .')';
+                            $title .= ' (på vegne af '.$response['_metadata']['ticket_data']['on_behalf_organization'].')';
                         }
                     }
 
@@ -425,7 +425,7 @@ class PdfHelper
                             $tocGroup = 'organization';
                             $mpdf->TOC_Entry('Organisationer', 0, $tocGroup);
                         }
-                    } else if ('organization' === $tocGroup) {
+                    } elseif ('organization' === $tocGroup) {
                         $tocGroup = 'private';
                         $mpdf->TOC_Entry('Privatpersoner', 0, $tocGroup);
                     }
@@ -493,7 +493,7 @@ class PdfHelper
         $template = 'pdf/frontpage.html.twig';
         $data['context'] = [
             'template_dir' => $this->params->get('kernel.project_dir').'/templates/pdf',
-            'template_base_url' => 'file://' . $this->params->get('kernel.project_dir').'/templates/pdf',
+            'template_base_url' => 'file://'.$this->params->get('kernel.project_dir').'/templates/pdf',
         ];
 
         return $this->twig->render($template, $data);
