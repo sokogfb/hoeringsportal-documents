@@ -10,7 +10,6 @@
 
 namespace App\Service;
 
-use App\Entity\Archiver;
 use App\Entity\ExceptionLogEntry;
 use App\Repository\ArchiverRepository;
 use App\ShareFile\Item;
@@ -21,6 +20,7 @@ use Mpdf\Mpdf;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerTrait;
 use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
@@ -72,6 +72,7 @@ class PdfHelper
         $this->entityManager = $entityManager;
         $this->mailer = $mailer;
         $this->params = $params;
+        $this->setLogger(new NullLogger());
     }
 
     public function process()
@@ -101,10 +102,16 @@ class PdfHelper
             throw new \RuntimeException('No archiver');
         }
 
-        $this->getData($hearingId, $metadata);
-        $this->combine($hearingId);
+        $result = $this->getData($hearingId, $metadata);
+        $this->info('get_data: '.(is_scalar($result) ? $result : json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)));
 
-        return  $this->share($hearingId);
+        $result = $this->combine($hearingId);
+        $this->info('combine: '.(is_scalar($result) ? $result : json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)));
+
+        $result = $this->share($hearingId);
+        $this->info('share: '.(is_scalar($result) ? $result : json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)));
+
+        return $result;
     }
 
     public function getData($hearingId, array $metadata = null)
@@ -208,8 +215,14 @@ class PdfHelper
         return $filename;
     }
 
-    public function setArchiver(Archiver $archiver)
+    public function setArchiver($archiver)
     {
+        if (\is_string($archiver)) {
+            $archiver = $this->archiverRepository->find($archiver);
+            if (null === $archiver) {
+                throw new \RuntimeException('Invalid archiver: '.$archiver);
+            }
+        }
         $this->archiver = $archiver;
         $this->shareFileService->setArchiver($archiver);
     }
@@ -219,6 +232,11 @@ class PdfHelper
         if (null !== $this->logger) {
             $this->logger->log($level, $message, $context);
         }
+    }
+
+    public function getLogFilename($hearingId, $id)
+    {
+        return $this->getDataFilename($hearingId, '-'.$id.'.log');
     }
 
     /**
@@ -277,7 +295,6 @@ class PdfHelper
 
             $dirname = $this->getDataDirectory($hearingId);
             $this->filesystem->mkdir($dirname);
-            $this->debug('dirname: '.$dirname);
 
             $index = 0;
             foreach ($data['files'] as $responseId => $item) {
@@ -441,13 +458,6 @@ class PdfHelper
         return base64_encode($name);
     }
 
-    private function debug($message, array $context = [])
-    {
-        if (null !== $this->logger) {
-            $this->logger->debug($message, $context);
-        }
-    }
-
     /**
      * Get responses indexed by item id.
      *
@@ -468,6 +478,10 @@ class PdfHelper
 
     private function getResponseGroups(array $responses)
     {
+        // $responses = array_slice($responses, 16, 1); // ERROR!
+        array_splice($responses, 16, 1); // ERROR!
+        // array_splice($responses, 15);
+
         $groups = [];
         foreach ($responses as $response) {
             $group = $response['_metadata']['ticket_data']['on_behalf'] ?? self::GROUP_DEFAULT;

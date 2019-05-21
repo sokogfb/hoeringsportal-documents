@@ -12,24 +12,103 @@ namespace App\Controller\Pdf;
 
 use AlterPHP\EasyAdminExtensionBundle\Controller\EasyAdminController;
 use App\Entity\Archiver;
+use App\Message\CombinePdf;
+use App\Repository\ArchiverRepository;
+use App\Service\PdfHelper;
 use App\Service\ShareFileService;
 use App\ShareFile\Item;
+use App\Util\FileLogger;
 use Doctrine\ORM\EntityRepository;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * Class ItemListController.
+ * Class AdminController.
  *
  * @Route(path="/admin/pdf")
  */
 class AdminController extends EasyAdminController
 {
+    /**
+     * @Route(path = "/combine/run", name = "pdf_combine_run", methods={"GET"})
+     */
+    public function run(Request $request)
+    {
+        $form = $this->createFormBuilder()
+            ->add('hearing', TextType::class, [
+                'required' => true,
+            ])
+            ->add('submit', SubmitType::class, [
+                'label' => 'Start',
+            ])
+            ->setAction($this->generateUrl('pdf_combine_run_start'))
+            ->setMethod('POST')
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        return $this->render('admin/pdf/run.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+    /**
+     * @Route(path = "/combine/run/start", name = "pdf_combine_run_start", methods={"POST"})
+     */
+    public function start(Request $request, PdfHelper $helper, ArchiverRepository $archiverRepository, MessageBusInterface $bus)
+    {
+        $hearingId = $request->request->get('form')['hearing'];
+        $id = uniqid('pdf', true);
+
+        $loggerFilename = $helper->getLogFilename($hearingId, $id);
+        $logger = new FileLogger($loggerFilename);
+
+        $logger->notice('waiting', ['status' => 'waiting']);
+        $archiver = $archiverRepository->findOneBy(['type' => Archiver::TYPE_PDF_COMBINE]);
+        $message = new CombinePdf($archiver->getId(), $hearingId, $loggerFilename);
+        $bus->dispatch($message);
+
+        return $this->redirectToRoute('pdf_combine_run_progress', [
+            'hearing' => $hearingId,
+            'id' => $id,
+        ]);
+    }
+
+    /**
+     * @Route(path = "/combine/{hearing}/run/{id}/progress", name = "pdf_combine_run_progress", methods={"GET"})
+     *
+     * @param mixed $hearing
+     * @param mixed $id
+     */
+    public function progress($hearing, $id)
+    {
+        return $this->render('admin/pdf/progress.html.twig', [
+            'hearing' => $hearing,
+            'status_url' => $this->generateUrl('pdf_combine_run_status', ['hearing' => $hearing, 'id' => $id]),
+        ]);
+    }
+
+    /**
+     * @Route(path = "/combine/{hearing}/run/{id}/status", name = "pdf_combine_run_status", methods={"GET"})
+     *
+     * @param mixed $hearing
+     * @param mixed $id
+     */
+    public function status($hearing, $id, PdfHelper $helper)
+    {
+        $filename = $helper->getLogFilename($hearing, $id);
+
+        return new JsonResponse(FileLogger::getContent($filename));
+    }
+
     /**
      * @Route(path = "/combine/archiver", name = "pdf_combine_step_0")
      * @Method("GET")

@@ -42,3 +42,33 @@ Run this command regularly to combine PDFs from finished hearings:
 ```sh
 bin/console  -vvv app:pdf:cron archiver-id
 ```
+
+## Manually building combined pdf
+
+Make sure that `rabbitmq-server` is running.
+
+Run
+
+```sh
+bin/console messenger:consume-messages amqp -vvv
+```
+
+to process the messages. Use `supervisor` or something similar to keep this
+process running, e.g.:
+
+```
+# /etc/supervisor/conf.d/symfony_sync_files.conf
+[program:symfony_sync_files]
+command = /data/www/sync-files/htdocs/bin/console messenger:consume amqp
+environment=APP_ENV=prod
+numprocs = 1
+autostart = true
+autorestart = true
+stderr_logfile=/data/www/sync-files/htdocs/var/log/symfony_sync_files.err.log
+stdout_logfile=/data/www/sync-files/htdocs/var/log/symfony_sync_files.out.log
+```
+
+```sh
+supervisorctl reload
+supervisorctl restart symfony_sync_files
+```

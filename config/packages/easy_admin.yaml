@@ -22,7 +22,7 @@ easy_admin:
 
             - label: 'PDF'
             - label: 'Combine'
-              route: 'pdf_combine_step_0'
+              route: 'pdf_combine_run'
 
             - label: 'eDoc'
             - label: 'Item list'

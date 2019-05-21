@@ -1,0 +1,26 @@
+{% extends '@EasyAdmin/default/layout.html.twig' %}
+
+{% block content_title 'Combine pdf – hearing'| trans %}
+
+{% block main %}
+    {% form_theme form '@EasyAdmin/form/bootstrap_4.html.twig' %}
+
+    {% block form %}
+        {{ form_start(form) }}
+            {% for key, value in form %}
+                {% if 'submit' != key %}
+                    {{ form_row(form[key]) }}
+                {% endif %}
+            {% endfor %}
+
+            <div class="form-group">
+                <label class="form-control-label"></label>
+                <div class="form-widget">
+                    <div class="form_control">
+                        {{ form_widget(form.submit) }}
+                    </div>
+                </div>
+            </div>
+        {{ form_end(form) }}
+    {% endblock %}
+{% endblock %}
