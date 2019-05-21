@@ -24,6 +24,7 @@ use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Process;
 use Symfony\Component\Templating\EngineInterface;
 
 class PdfHelper
@@ -31,6 +32,8 @@ class PdfHelper
     use LoggerAwareTrait;
     use LoggerTrait;
     use ArchiverAwareTrait;
+
+    private const GROUP_DEFAULT = 'Privatperson';
 
     /** @var ArchiverRepository */
     private $archiverRepository;
@@ -82,9 +85,7 @@ class PdfHelper
             foreach ($hearings as $hearing) {
                 try {
                     $hearingId = 'H'.$hearing['hearing_id'];
-                    $this->getData($hearingId, $hearing);
-                    $this->combine($hearingId);
-                    $this->share($hearingId);
+                    $this->run($hearingId, $hearing);
                 } catch (\Throwable $t) {
                     $this->logException($t);
                 }
@@ -92,6 +93,18 @@ class PdfHelper
         } catch (\Throwable $t) {
             $this->logException($t);
         }
+    }
+
+    public function run($hearingId, array $metadata = null)
+    {
+        if (null === $this->getArchiver()) {
+            throw new \RuntimeException('No archiver');
+        }
+
+        $this->getData($hearingId, $metadata);
+        $this->combine($hearingId);
+
+        return  $this->share($hearingId);
     }
 
     public function getData($hearingId, array $metadata = null)
@@ -183,11 +196,6 @@ class PdfHelper
         }
 
         return $result;
-    }
-
-    public function archive($hearingId)
-    {
-        throw new \RuntimeException(__METHOD__.' is not implemented!');
     }
 
     public function buildCombinedPdf(array $data)
@@ -359,69 +367,64 @@ class PdfHelper
 
         $this->debug('Adding table of contents');
 
-        if (!empty(array_filter($data['responses'], [$this, 'isOrganizationResponse']))) {
-            $mpdf->TOCpagebreakByArray([
-                'name' => 'organization',
-                'links' => true,
-            ]);
-        }
+        $groups = $this->getResponseGroups($data['responses']);
 
-        if (!empty(array_filter($data['responses'], [$this, 'isPrivateResponse']))) {
+        $total = 0;
+        foreach ($groups as $group => $responses) {
             $mpdf->TOCpagebreakByArray([
-                'name' => 'private',
+                'name' => $this->getTOCName($group),
                 'links' => true,
             ]);
+            $total += \count($responses);
         }
 
         $index = 0;
         $tocGroup = null;
-        foreach ($data['responses'] as $response) {
-            ++$index;
-            $response = new Item($response);
-            $filename = $this->getPdfFilename($directory, $response);
-            if (!$this->filesystem->exists($filename)) {
-                continue;
+        foreach ($groups as $group => $responses) {
+            $this->debug(sprintf('Group: %s', $group));
+            $tocName = $this->getTOCName($group);
+            if ($tocGroup !== $group) {
+                $mpdf->TOC_Entry($group, 0, $tocName);
             }
 
-            $pagecount = $mpdf->setSourceFile($filename);
-            $this->debug(sprintf('% 4d/%d Adding file %s', $index, \count($data['responses']), $filename));
-
-            for ($p = 1; $p <= $pagecount; ++$p) {
-                $tplId = $mpdf->ImportPage($p);
-                $size = $mpdf->GetTemplateSize($tplId);
-
-                if ($index > 1 || $p > 1) {
-                    $mpdf->AddPageByArray([
-                        'orientation' => $size['width'] > $size['height'] ? 'L' : 'P',
-                        // Make room for page footer.
-                        'sheet-size' => [$size['width'], $size['height'] + 20],
-                    ]);
-                }
-                if (1 === $p) {
-                    $title = $response->getName() ?? $response->getId();
-
-                    if (isset($response['_metadata']['user_data']['name'])) {
-                        $title = $response['_metadata']['user_data']['name'];
-
-                        if ($this->isOrganizationResponse($response)) {
-                            $title .= ' (på vegne af '.$response['_metadata']['ticket_data']['on_behalf_organization'].')';
-                        }
-                    }
-
-                    if ($this->isOrganizationResponse($response)) {
-                        if (null === $tocGroup) {
-                            $tocGroup = 'organization';
-                            $mpdf->TOC_Entry('Organisationer', 0, $tocGroup);
-                        }
-                    } elseif ('organization' === $tocGroup) {
-                        $tocGroup = 'private';
-                        $mpdf->TOC_Entry('Privatpersoner', 0, $tocGroup);
-                    }
-
-                    $mpdf->TOC_Entry($title, 1, $this->isOrganizationResponse($response) ? 'organization' : 'private');
+            foreach ($responses as $response) {
+                ++$index;
+                $response = new Item($response);
+                $filename = $this->getPdfFilename($directory, $response);
+                if (!$this->filesystem->exists($filename)) {
+                    continue;
                 }
 
-                $mpdf->useTemplate($tplId);
+                $pagecount = $mpdf->setSourceFile($filename);
+                $this->debug(sprintf('% 4d/%d Adding file %s', $index, $total, $filename));
+
+                for ($p = 1; $p <= $pagecount; ++$p) {
+                    $tplId = $mpdf->ImportPage($p);
+                    $size = $mpdf->GetTemplateSize($tplId);
+
+                    if ($index > 1 || $p > 1) {
+                        $mpdf->AddPageByArray([
+                            'orientation' => $size['width'] > $size['height'] ? 'L' : 'P',
+                            // Make room for page footer.
+                            'sheet-size' => [$size['width'], $size['height'] + 20],
+                        ]);
+                    }
+                    if (1 === $p) {
+                        $title = $response->getName() ?? $response->getId();
+
+                        if (isset($response['_metadata']['user_data']['name'])) {
+                            $title = $response['_metadata']['user_data']['name'];
+
+                            if ($this->isOrganizationResponse($response)) {
+                                $title .= ' (på vegne af '.$response['_metadata']['ticket_data']['on_behalf_organization'].')';
+                            }
+                        }
+
+                        $mpdf->TOC_Entry($title, 1, $tocName);
+                    }
+
+                    $mpdf->useTemplate($tplId);
+                }
             }
         }
 
@@ -429,6 +432,11 @@ class PdfHelper
         $mpdf->Output($filename);
 
         return $filename;
+    }
+
+    private function getTOCName($name)
+    {
+        return base64_encode($name);
     }
 
     private function debug($message, array $context = [])
@@ -442,34 +450,53 @@ class PdfHelper
      * Get responses indexed by item id.
      *
      * @param Item $hearing
-     * @param bool $includeFiles
      *
      * @return array|false
      */
-    private function getResponses(Item $hearing, $includeFiles = false)
+    private function getResponses(Item $hearing)
     {
-        // @TODO Handle $includeFiles.
-
         $responses = $this->shareFileService->getResponses($hearing);
-
-        // Split into organizations and persons.
-        $organizations = array_filter($responses, [$this, 'isOrganizationResponse']);
-        $persons = array_filter($responses, [$this, 'isPrivateResponse']);
-        // Sort by creation time.
-        usort($organizations, function (Item $a, Item $b) {
-            return strcmp($a->creationDate, $b->creationDate);
-        });
-        usort($persons, function (Item $a, Item $b) {
-            return strcmp($a->creationDate, $b->creationDate);
-        });
-
-        $responses = array_merge($organizations, $persons);
 
         // Index by item id.
         return array_combine(
             array_column($responses, 'id'),
             $responses
         );
+    }
+
+    private function getResponseGroups(array $responses)
+    {
+        $groups = [];
+        foreach ($responses as $response) {
+            $group = $response['_metadata']['ticket_data']['on_behalf'] ?? self::GROUP_DEFAULT;
+            $groups[$group][] = $response;
+        }
+
+        // Sort groups.
+        $compareItemsByPersonName = function (array $a, array $b) {
+            return strcasecmp(
+                $a['_metadata']['user_data']['name'] ?? '',
+                $b['_metadata']['user_data']['name'] ?? ''
+            );
+        };
+
+        foreach ($groups as $name => &$responses) {
+            usort($responses, $compareItemsByPersonName);
+        }
+
+        // Sort groups by name and make sure that "Privatperson" comes last.
+        uksort($groups, function (string $a, string $b) {
+            if (self::GROUP_DEFAULT === $a) {
+                return 1;
+            }
+            if (self::GROUP_DEFAULT === $b) {
+                return -1;
+            }
+
+            return strcasecmp($a, $b);
+        });
+
+        return $groups;
     }
 
     private function isOrganizationResponse($response)

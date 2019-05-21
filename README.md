@@ -25,7 +25,12 @@ information on what's going on.
 bin/console -vvv app:pdf:combine get-data hearing-id --archiver=archiver-id # Get data from ShareFile
 bin/console -vvv app:pdf:combine combine hearing-id  # Build combined pdf
 bin/console -vvv app:pdf:combine share hearing-id    # Upload combined pdf to ShareFile
-bin/console -vvv app:pdf:combine archive hearing-id  # Archive combined pdf in eDoc
+```
+
+All-in-one:
+
+```sh
+bin/console -vvv app:pdf:combine run hearing-id --archiver=archiver-id # Archive combined pdf in eDoc
 ```
 
 If an archiver is not specified, the first default archiver will be used.
