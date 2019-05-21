@@ -371,12 +371,14 @@ class PdfHelper
 
         $total = 0;
         foreach ($groups as $group => $responses) {
-            $mpdf->TOCpagebreakByArray([
-                'name' => $this->getTOCName($group),
-                'links' => true,
-            ]);
             $total += \count($responses);
         }
+
+        $mpdf->TOCpagebreakByArray([
+            'links' => true,
+            'toc-orientation' => 'portrait',
+            'toc-sheet-size' => 'A4',
+        ]);
 
         $index = 0;
         $tocGroup = null;
@@ -384,7 +386,7 @@ class PdfHelper
             $this->debug(sprintf('Group: %s', $group));
             $tocName = $this->getTOCName($group);
             if ($tocGroup !== $group) {
-                $mpdf->TOC_Entry($group, 0, $tocName);
+                $mpdf->TOC_Entry($group, 0);
             }
 
             foreach ($responses as $response) {
@@ -420,7 +422,7 @@ class PdfHelper
                             }
                         }
 
-                        $mpdf->TOC_Entry($title, 1, $tocName);
+                        $mpdf->TOC_Entry($title, 1);
                     }
 
                     $mpdf->useTemplate($tplId);
