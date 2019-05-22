@@ -204,69 +204,91 @@ class ArchiveHelper extends AbstractArchiveHelper
                 }
 
                 // Overview files
-                try {
-                    $this->info('Getting overview files from ShareFile');
-
-                    $edocResponse = $this->edoc->getResponse($edocHearing, $shareFileHearing);
-                    $sourceFile = null;
-                    $sourceFileCreatedAt = null;
-                    $sourceFileType = null;
-                    $pattern = $this->archiver->getConfigurationValue('[edoc][sharefile_file_combined_name_pattern]', '*-combined.pdf');
-                    if (null !== $pattern) {
-                        $files = $this->shareFile->getFiles($shareFileHearing);
-                        foreach ($files as $file) {
-                            if (fnmatch($pattern, $file['Name'])) {
-                                $sourceFile = $file;
-                                $sourceFileCreatedAt = $file->creationDate;
-                                $sourceFileType = ArchiveFormat::PDF;
-                            }
-                        }
+                $overviews = [
+                    [
+                        'pattern' => $this->archiver->getConfigurationValue('[edoc][sharefile_file_combined_name_pattern]', '*-combined.pdf'),
+                        'format' => $this->archiver->getConfigurationValue('[edoc][sharefile_file_combined_format]', ArchiveFormat::PDF),
+                        'title' => $shareFileHearing->getName().' - samlede høringssvar',
+                    ],
+                    [
+                        'pattern' => $this->archiver->getConfigurationValue('[edoc][sharefile_file_overview_name_pattern]', 'overblik.xlsx'),
+                        'format' => $this->archiver->getConfigurationValue('[edoc][sharefile_file_overview_format]', ArchiveFormat::XLSX),
+                        'title' => $shareFileHearing->getName().' - overblik over høringssvar',
+                    ],
+                ];
+                foreach ($overviews as $overview) {
+                    // We archive the overview before the hearing has been created in eDoc.
+                    if (null === $edocHearing) {
+                        continue;
                     }
 
-                    if (null !== $sourceFile) {
-                        $fileContents = $this->shareFile->downloadFile($sourceFile);
-                        if (null === $fileContents) {
-                            throw new RuntimeException('Cannot get file contents for item '.$sourceFile->id);
-                        }
-                        $fileData = [
-                            'ArchiveFormatCode' => $sourceFileType,
-                            'DocumentContents' => base64_encode($fileContents),
-                        ];
-                        if (null === $edocResponse) {
-                            $this->info('Creating new document in eDoc');
+                    $pattern = $overview['pattern'] ?? null;
+                    $title = $overview['title'] ?? null;
+                    $format = $overview['format'] ?? ArchiveFormat::PDF;
 
-                            $data = [
-                                'DocumentVersion' => $fileData,
+                    try {
+                        $this->info(sprintf('Getting overview file "%s" from ShareFile', $title));
+
+                        $edocResponse = $this->edoc->getResponse($edocHearing, $shareFileHearing);
+                        $sourceFile = null;
+                        $sourceFileCreatedAt = null;
+                        $sourceFileType = null;
+                        if (null !== $pattern) {
+                            $files = $this->shareFile->getFiles($shareFileHearing);
+                            foreach ($files as $file) {
+                                if (fnmatch($pattern, $file['Name'])) {
+                                    $sourceFile = $file;
+                                    $sourceFileCreatedAt = $file->creationDate;
+                                    $sourceFileType = $format;
+                                }
+                            }
+                        }
+
+                        if (null !== $sourceFile) {
+                            $fileContents = $this->shareFile->downloadFile($sourceFile);
+                            if (null === $fileContents) {
+                                throw new RuntimeException('Cannot get file contents for item '.$sourceFile->id);
+                            }
+                            $fileData = [
+                                'ArchiveFormatCode' => $sourceFileType,
+                                'DocumentContents' => base64_encode($fileContents),
                             ];
-                            if (null !== $caseWorker) {
-                                $data['CaseManagerReference'] = $caseWorker['CaseWorkerId'];
-                            }
-                            if (null !== $organisationReference) {
-                                $data['OrganisationReference'] = $organisationReference;
-                            }
+                            if (null === $edocResponse) {
+                                $this->info('Creating new document in eDoc');
 
-                            $data['TitleText'] = $shareFileHearing->getName().' - samlede høringssvar';
+                                $data = [
+                                    'DocumentVersion' => $fileData,
+                                ];
+                                if (null !== $caseWorker) {
+                                    $data['CaseManagerReference'] = $caseWorker['CaseWorkerId'];
+                                }
+                                if (null !== $organisationReference) {
+                                    $data['OrganisationReference'] = $organisationReference;
+                                }
 
-                            $edocResponse = $this->edoc->createResponse($edocHearing, $shareFileHearing, $data);
-                        } else {
-                            $documentUpdatedAt = $this->edoc->getDocumentUpdatedAt($edocResponse);
-                            if ($documentUpdatedAt < $sourceFileCreatedAt) {
-                                $this->info('Updating document in eDoc');
-                                $edocResponse = $this->edoc->updateResponse(
-                                    $edocResponse,
-                                    $shareFileHearing,
-                                    $fileData
-                                );
+                                $data['TitleText'] = $title;
+
+                                $edocResponse = $this->edoc->createResponse($edocHearing, $shareFileHearing, $data);
                             } else {
-                                $this->info('Document in eDoc is already up to date');
+                                $documentUpdatedAt = $this->edoc->getDocumentUpdatedAt($edocResponse);
+                                if ($documentUpdatedAt < $sourceFileCreatedAt) {
+                                    $this->info('Updating document in eDoc');
+                                    $edocResponse = $this->edoc->updateResponse(
+                                        $edocResponse,
+                                        $shareFileHearing,
+                                        $fileData
+                                    );
+                                } else {
+                                    $this->info('Document in eDoc is already up to date');
+                                }
+                            }
+                            if (null === $edocResponse) {
+                                throw new RuntimeException(sprintf('Error creating overview "%s" (%s)', $title, $shareFileHearing['Name']));
                             }
                         }
-                        if (null === $edocResponse) {
-                            throw new RuntimeException('Error creating overview: '.$shareFileHearing['Name']);
-                        }
+                    } catch (\Throwable $t) {
+                        $this->logException($t);
                     }
-                } catch (\Throwable $t) {
-                    $this->logException($t);
                 }
             }
 
