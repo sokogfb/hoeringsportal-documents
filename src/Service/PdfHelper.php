@@ -448,6 +448,7 @@ class PdfHelper
         }
 
         $filename = $this->getDataFilename($hearingId, '-combined.pdf');
+        $this->debug(sprintf('Writing combined pdf to %s', $filename));
         $mpdf->Output($filename);
 
         return $filename;

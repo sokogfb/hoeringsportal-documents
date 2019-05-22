@@ -23,6 +23,9 @@
     "composer/xdebug-handler": {
         "version": "1.3.0"
     },
+    "cweagans/composer-patches": {
+        "version": "1.6.5"
+    },
     "deskpro/deskpro-api-client-php": {
         "version": "v2.0.0"
     },
