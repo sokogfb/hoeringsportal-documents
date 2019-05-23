@@ -50,7 +50,7 @@ Make sure that `rabbitmq-server` is running.
 Run
 
 ```sh
-bin/console messenger:consume-messages amqp -vvv
+bin/console messenger:consume amqp -vvv
 ```
 
 to process the messages. Use `supervisor` or something similar to keep this

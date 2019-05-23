@@ -2,13 +2,12 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "~7.2.0",
+        "php": "~7.3.0",
         "ext-amqp": "*",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "alterphp/easyadmin-extension-bundle": "^2.0",
         "api-platform/api-pack": "^1.1",
-        "cweagans/composer-patches": "^1.6",
         "deskpro/deskpro-api-client-php": "^2.0",
         "easycorp/easyadmin-bundle": "^2.0",
         "friendsofsymfony/user-bundle": "^2.1",
@@ -101,11 +100,6 @@
         "symfony/symfony": "*"
     },
     "extra": {
-        "patches": {
-            "setasign/fpdi": {
-                "No destructor": "patches/setasign/fpdi/no-destructor.patch"
-            }
-        },
         "symfony": {
             "allow-contrib": false,
             "require": "4.2.*"
