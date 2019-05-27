@@ -470,6 +470,12 @@ class PdfHelper
     {
         $responses = $this->shareFileService->getResponses($hearing);
 
+        // Remove responses that are marked as unpublished.
+        $responses = array_filter($responses, function (Item $response) {
+            return !isset($response->metadata['ticket_data']['unpublish_reply'])
+                || 'Checked' !== $response->metadata['ticket_data']['unpublish_reply'];
+        });
+
         // Index by item id.
         return array_combine(
             array_column($responses, 'id'),
