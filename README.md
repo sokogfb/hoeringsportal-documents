@@ -57,20 +57,20 @@ to process the messages. Use `supervisor` or something similar to keep this
 process running, e.g.:
 
 ```
-# /etc/supervisor/conf.d/symfony_sync_files.conf
-[program:symfony_sync_files]
-command = /data/www/sync-files/htdocs/bin/console messenger:consume amqp
+# /etc/supervisor/conf.d/symfony_hoeringsportal_documents.conf
+[program:symfony_hoeringsportal_documents]
+command = /data/www/hoeringsportal-documents/htdocs/bin/console messenger:consume amqp
 environment=APP_ENV=prod
 numprocs = 1
 autostart = true
 autorestart = true
-stderr_logfile=/data/www/sync-files/htdocs/var/log/symfony_sync_files.err.log
-stdout_logfile=/data/www/sync-files/htdocs/var/log/symfony_sync_files.out.log
+stderr_logfile=/data/www/hoeringsportal-documents/htdocs/var/log/symfony_hoeringsportal_documents.err.log
+stdout_logfile=/data/www/hoeringsportal-documents/htdocs/var/log/symfony_hoeringsportal_documents.out.log
 ```
 
 ```sh
 supervisorctl reload
-supervisorctl restart symfony_sync_files
+supervisorctl restart symfony_hoeringsportal_documents
 ```
 
 
@@ -82,7 +82,7 @@ docker-compose up -d
 ```
 
 ```sh
-sudo sh -c 'echo "0.0.0.0 sync-files.docker.localhost" >> /etc/hosts'
+sudo sh -c 'echo "0.0.0.0 hoeringsportal-documents.docker.localhost" >> /etc/hosts'
 ```
 
 Install additional requirements:
@@ -107,7 +107,7 @@ docker-compose exec phpfpm bin/console fos:user:create --super-admin super-admin
 Open the site in default browser:
 
 ```sh
-open "http://sync-files.docker.localhost:$(docker-compose port reverse-proxy 80 | cut -d: -f2)"
+open "http://hoeringsportal-documents.docker.localhost:$(docker-compose port reverse-proxy 80 | cut -d: -f2)"
 ```
 
 Create an “Archiver” of type “pdfcombine” with a configuration similar to this:
