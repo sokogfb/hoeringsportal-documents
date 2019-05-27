@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+apt-get update
+apt-get --yes install rabbitmq-server librabbitmq-dev
+
+pecl channel-update pecl.php.net
+pecl uninstall amqp
+pecl install amqp <<< ''
+cat > /etc/php/7.3/mods-available/amqp.ini <<'EOF'
+; configuration for php common module
+; priority=20
+extension=amqp.so
+EOF
+phpenmod amqp

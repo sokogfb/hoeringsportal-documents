@@ -72,3 +72,54 @@ stdout_logfile=/data/www/sync-files/htdocs/var/log/symfony_sync_files.out.log
 supervisorctl reload
 supervisorctl restart symfony_sync_files
 ```
+
+
+# Docker
+
+```sh
+docker-compose pull
+docker-compose up -d
+```
+
+```sh
+sudo sh -c 'echo "0.0.0.0 sync-files.docker.localhost" >> /etc/hosts'
+```
+
+Install additional requirements:
+
+```sh
+docker-compose exec phpfpm /app/.docker/scripts/setup
+```
+
+Install `composer` stuff:
+
+```sh
+docker-compose exec phpfpm composer install
+```
+
+Create super admin:
+
+```sh
+docker-compose exec phpfpm bin/console doctrine:migrations:migrate --no-interaction
+docker-compose exec phpfpm bin/console fos:user:create --super-admin super-admin super-admin@example.com password
+```
+
+Open the site in default browser:
+
+```sh
+open "http://sync-files.docker.localhost:$(docker-compose port reverse-proxy 80 | cut -d: -f2)"
+```
+
+Create an “Archiver” of type “pdfcombine” with a configuration similar to this:
+
+```yaml
+type: combinepdf
+
+sharefile:
+ hostname: «account».sharefile.com
+ client_id: «ShareFile client id»
+ secret: «ShareFile secret»
+ username: «ShareFile api username»
+ password: «ShareFile api password»
+ root_id: «ShareFile root id»
+```
