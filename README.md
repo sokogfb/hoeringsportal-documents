@@ -78,7 +78,7 @@ supervisorctl restart symfony_hoeringsportal_documents
 
 ```sh
 docker-compose pull
-docker-compose up -d
+docker-compose up --detach
 ```
 
 ```sh
@@ -104,10 +104,10 @@ docker-compose exec phpfpm bin/console doctrine:migrations:migrate --no-interact
 docker-compose exec phpfpm bin/console fos:user:create --super-admin super-admin super-admin@example.com password
 ```
 
-Open the site in default browser:
+Get the site url:
 
 ```sh
-open "http://hoeringsportal-documents.docker.localhost:$(docker-compose port reverse-proxy 80 | cut -d: -f2)"
+echo "http://hoeringsportal-documents.docker.localhost:$(docker-compose port reverse-proxy 80 | cut -d: -f2)"
 ```
 
 Create an “Archiver” of type “pdfcombine” with a configuration similar to this:
