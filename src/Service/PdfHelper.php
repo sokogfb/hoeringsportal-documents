@@ -82,6 +82,7 @@ class PdfHelper
         }
 
         try {
+            $startTime = new \DateTime();
             $hearings = $this->getFinishedHearings();
             foreach ($hearings as $hearing) {
                 try {
@@ -91,6 +92,9 @@ class PdfHelper
                     $this->logException($t);
                 }
             }
+            $this->archiver->setLastRunAt($startTime);
+            $this->entityManager->persist($this->archiver);
+            $this->entityManager->flush();
         } catch (\Throwable $t) {
             $this->logException($t);
         }
