@@ -1,0 +1,69 @@
+{% extends '@EasyAdmin/default/layout.html.twig' %}
+
+{% block content_title 'Combine pdf – ' ~ hearing | trans %}
+
+{% block main %}
+    <div class="console">
+        <div id="status" class="status alert"></div>
+        <div id="output"></div>
+    </div>
+
+{% endblock %}
+
+{% block head_stylesheets %}
+    <style>
+        .console {
+            font-family: monospace;
+            white-space: pre;
+            padding: 18px 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block body_javascript %}
+    <script>(function ($) {
+            var statusUrl = {{ status_url|json_encode|raw }};
+            var getAlertClassNames = function(level) {
+                switch (level) {
+                    case 'error':
+                    case 'debug':
+                        return 'danger';
+                    case 'notice':
+                        return 'warning';
+                    case 'done':
+                        return 'success';
+                }
+
+                return 'primary';
+            }
+
+            var updateLog = function() {
+                $.get(statusUrl, function (data) {
+                    $('#output').empty()
+                    $(data).each(function (index, item) {
+                        $('<div/>')
+                        .appendTo($('#output'))
+                        .html(item.message)
+                        .addClass('alert-'+getAlertClassNames(item.level))
+                    })
+                }).done(function (data) {
+                    var status = null
+                    $(data).each(function (index, item) {
+                        if ('undefined' !== typeof item.context.status) {
+                            status = item.context.status
+                        }
+                    })
+
+                    if (null !== status) {
+                        $('#status').html(status).addClass('alert-'+getAlertClassNames(status))
+                    }
+
+                    if (null === status || (status !== 'done' && status !== 'error')) {
+                        setTimeout(updateLog, 1000)
+                    }
+                })
+            }
+
+            updateLog()
+        }(jQuery))</script>
+{% endblock %}

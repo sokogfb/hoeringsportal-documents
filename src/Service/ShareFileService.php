@@ -86,6 +86,24 @@ class ShareFileService
         return $this->construct(Item::class, $hearings);
     }
 
+    public function findHearing($name)
+    {
+        $itemId = $this->configuration['root_id'];
+
+        $result = $this->client()->getChildren(
+            $itemId,
+            [
+                '$filter' => 'Name eq \''.str_replace('\'', '\\\'', $name).'\'',
+            ]
+        );
+
+        if (!isset($result['value']) || 1 !== \count($result['value'])) {
+            throw new \RuntimeException('Invalid hearing: '.$name);
+        }
+
+        return new Item(reset($result['value']));
+    }
+
     public function getHearing($itemId)
     {
         $hearing = $this->getItem($itemId);
@@ -223,6 +241,29 @@ class ShareFileService
         $itemId = $this->getItemId($item);
 
         return $this->client()->getItemContents($itemId);
+    }
+
+    public function uploadFile(string $filename, string $folderId, bool $unzip = false, bool $overwrite = true, bool $notify = true)
+    {
+        $result = $this->client()->uploadFileStandard($filename, $folderId, $unzip, $overwrite, $notify);
+
+        return $result;
+    }
+
+    public function findFile(string $filename, string $folderId)
+    {
+        $result = $this->client()->getChildren(
+            $folderId,
+            [
+                '$filter' => 'Name eq \''.str_replace('\'', '\\\'', $filename).'\'',
+            ]
+        );
+
+        if (!isset($result['value']) || 1 !== \count($result['value'])) {
+            throw new \RuntimeException(sprintf('No such file %s in folder %s', $filename, $folderId));
+        }
+
+        return new Item(reset($result['value']));
     }
 
     /**
@@ -368,7 +409,7 @@ class ShareFileService
     private function client()
     {
         if (null === $this->client) {
-            $this->client = new Client(
+            $this->client = new ShareFileClient(
                 $this->configuration['hostname'],
                 $this->configuration['client_id'],
                 $this->configuration['secret'],

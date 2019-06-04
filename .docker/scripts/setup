@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+echo "${bold}Installing supervisor${normal}"
+apt-get -qq update
+apt-get -qq --yes install supervisor
+
+echo "${bold}Installing rabbitmq-server${normal}"
+# librabbitmq-dev is required to build the amqp php extension
+apt-get -qq --yes install rabbitmq-server librabbitmq-dev
+
+echo "${bold}Building amqp php extension${normal}"
+pecl channel-update pecl.php.net
+pecl install amqp <<< ''
+
+
+echo "${bold}Enabling amqp php extension${normal}"
+cat > /etc/php/7.3/mods-available/amqp.ini <<'EOF'
+; configuration for php common module
+; priority=20
+extension=amqp.so
+EOF
+phpenmod amqp
+service php7.3-fpm reload
+
+echo "${bold}Configuring supervisor process${normal}"
+# supervisor process configuration
+cat > /etc/supervisor/conf.d/symfony_hoeringsportal_documents.conf <<'EOF'
+[program:symfony_hoeringsportal_documents]
+command = /app/bin/console messenger:consume amqp
+numprocs = 1
+autostart = true
+autorestart = true
+stderr_logfile=/app/var/log/symfony_hoeringsportal_documents.err.log
+stdout_logfile=/app/var/log/symfony_hoeringsportal_documents.out.log
+EOF
+
+echo "${bold}Starting rabbitmq-server${normal}"
+service rabbitmq-server start
+
+echo "${bold}Starting supervisor${normal}"
+service supervisor start
+
+echo "${bold}Enabling supervisor process${normal}"
+supervisorctl reload
+# supervisorctl restart symfony_hoeringsportal_documents

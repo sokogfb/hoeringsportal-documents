@@ -11,8 +11,8 @@
 namespace App\Command\ShareFile2eDoc;
 
 use App\Command\Command;
+use App\Entity\Archiver;
 use App\Service\ArchiveHelper;
-use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
@@ -20,6 +20,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ArchiveCommand extends Command
 {
+    protected $archiverType = Archiver::TYPE_SHAREFILE2EDOC;
+
     /** @var ArchiveHelper */
     private $helper;
 
@@ -33,23 +35,14 @@ class ArchiveCommand extends Command
     {
         parent::configure();
         $this->setName('app:sharefile2edoc:archive')
-            ->addOption('hearing-item-id', null, InputOption::VALUE_REQUIRED, 'Hearing item id to archive')
-            ->addOption('last-run-at', null, InputOption::VALUE_REQUIRED, 'Use this time as value of Archiver.lastRunAt');
+            ->addOption('hearing-item-id', null, InputOption::VALUE_REQUIRED, 'Hearing item id to archive');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $hearingItemId = $input->getOption('hearing-item-id');
         parent::execute($input, $output);
 
-        if ($lastRunAt = $input->getOption('last-run-at')) {
-            try {
-                $this->archiver->setLastRunAt(new \DateTime($lastRunAt));
-            } catch (\Exception $ex) {
-                throw new RuntimeException('Invalid last-run-at value: '.$lastRunAt);
-            }
-        }
-
+        $hearingItemId = $input->getOption('hearing-item-id');
         $logger = new ConsoleLogger($output);
         $this->helper->setLogger($logger);
         $this->helper->archive($this->archiver, $hearingItemId);

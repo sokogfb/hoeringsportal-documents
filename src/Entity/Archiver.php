@@ -23,9 +23,11 @@ use Symfony\Component\Yaml\Yaml;
  * @Gedmo\Loggable()
  * @UniqueEntity("name")
  */
-class Archiver implements Loggable
+class Archiver implements Loggable, \JsonSerializable
 {
     use TimestampableEntity;
+    public const TYPE_SHAREFILE2EDOC = 'sharefile2edoc';
+    public const TYPE_PDF_COMBINE = 'pdfcombine';
 
     /**
      * @ORM\Id()
@@ -168,5 +170,14 @@ class Archiver implements Loggable
         $this->type = $type;
 
         return $this;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'configuration' => $this->getConfigurationValue(),
+        ];
     }
 }

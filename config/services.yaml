@@ -68,6 +68,12 @@ services:
               arguments:
                   - '@App\Repository\ArchiverRepository'
 
+    App\Command\Pdf\CronCommand:
+        calls:
+            - method: setArchiverRepository
+              arguments:
+                  - '@App\Repository\ArchiverRepository'
+
     App\Command\ShareFile\TestCommand:
         calls:
             - method: setArchiverRepository
