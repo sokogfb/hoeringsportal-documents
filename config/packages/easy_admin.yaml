@@ -132,6 +132,8 @@ easy_admin:
                 form_filters:
                     # - archiver
 
+                sort: ['updatedAt', 'DESC']
+
                 fields:
                     - property: archiver
                     - property: caseFileIdentifier
@@ -159,6 +161,8 @@ easy_admin:
             list:
                 form_filters:
                     # - archiver
+
+                sort: ['updatedAt', 'DESC']
 
                 fields:
                     - property: archiver
