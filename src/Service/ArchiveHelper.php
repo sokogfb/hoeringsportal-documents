@@ -132,7 +132,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                         }
 
                         $this->info($shareFileResponse->name);
-                        $edocDocument = $this->edoc->getResponse($edocHearing, $shareFileResponse);
+                        $edocResponse = $this->edoc->getResponse($edocHearing, $shareFileResponse);
                         $this->info('Getting file contents from ShareFile');
 
                         $sourceFile = null;
@@ -164,7 +164,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                             'ArchiveFormatCode' => $sourceFileType,
                             'DocumentContents' => base64_encode($fileContents),
                         ];
-                        if (null === $edocDocument) {
+                        if (null === $edocResponse) {
                             $this->info('Creating new document in eDoc');
 
                             $data = [
@@ -177,13 +177,13 @@ class ArchiveHelper extends AbstractArchiveHelper
                                 $data['OrganisationReference'] = $organisationReference;
                             }
 
-                            $edocDocument = $this->edoc->createResponse($edocHearing, $shareFileResponse, $data);
+                            $edocResponse = $this->edoc->createResponse($edocHearing, $shareFileResponse, $data);
                         } else {
-                            $documentUpdatedAt = $this->edoc->getDocumentUpdatedAt($edocDocument);
+                            $documentUpdatedAt = $this->edoc->getDocumentUpdatedAt($edocResponse);
                             if ($documentUpdatedAt < $sourceFileCreatedAt) {
                                 $this->info('Updating document in eDoc');
-                                $edocDocument = $this->edoc->updateResponse(
-                                    $edocDocument,
+                                $edocResponse = $this->edoc->updateResponse(
+                                    $edocResponse,
                                     $shareFileResponse,
                                     $fileData
                                 );
@@ -191,7 +191,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                                 $this->info('Document in eDoc is already up to date');
                             }
                         }
-                        if (null === $edocDocument) {
+                        if (null === $edocResponse) {
                             throw new RuntimeException('Error creating response: '.$shareFileResponse['Name']);
                         }
                     } catch (\Throwable $t) {
@@ -225,6 +225,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                 foreach ($shareFileResponses as $shareFileResponse) {
                     if (!empty($shareFileResponse->metadata['ticket_data']['department_id'])) {
                         $departmentId = $shareFileResponse->metadata['ticket_data']['department_id'];
+
                         break;
                     }
                 }
@@ -244,6 +245,7 @@ class ArchiveHelper extends AbstractArchiveHelper
                     foreach ($shareFileResponses as $shareFileResponse) {
                         if (!empty($shareFileResponse->metadata['ticket_data']['edoc_case_id'])) {
                             $edocCaseFileId = $shareFileResponse->metadata['ticket_data']['edoc_case_id'];
+
                             break;
                         }
                     }

@@ -82,7 +82,7 @@ class ShareFileService
     }
 
     /**
-     * @param null|\DateTime $changedAfter
+     * @param mixed $hearingItemId
      *
      * @return Item[]
      */
