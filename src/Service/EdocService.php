@@ -73,6 +73,43 @@ class EdocService
 //        $this->getArchiveFormats();
     }
 
+    public function getDocument(CaseFile $case, Item $item)
+    {
+        $document = $this->documentRepository->findOneBy([
+            'shareFileItemId' => $item->id,
+            'archiver' => $this->archiver,
+        ]);
+
+        return $document ? $this->getDocumentById($document->getDocumentIdentifier()) : null;
+    }
+
+    public function createDocument(CaseFile $case, Item $item, array $data = [])
+    {
+        $name = $item->getName();
+        $data += [
+            'TitleText' => $name,
+        ];
+
+        if (isset($this->configuration['document']['defaults'])) {
+            $data += $this->configuration['document']['defaults'];
+        }
+
+        $document = $this->edoc()->createDocumentAndDocumentVersion($case, $data);
+
+        $this->documentRepository->created($document, $item, $this->archiver);
+
+        return $document;
+    }
+
+    public function updateDocument(Document $document, Item $item, array $data)
+    {
+        $result = $this->edoc()->createDocumentVersion($document, $data);
+
+        $this->documentRepository->updated($document, $item, $this->archiver);
+
+        return $result;
+    }
+
     public function getHearings()
     {
         return $this->getCases();

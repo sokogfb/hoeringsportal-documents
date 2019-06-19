@@ -70,6 +70,38 @@ class ShareFileService
      *
      * @return Item[]
      */
+    public function getUpdatedOverviewFiles(\DateTime $changedAfter)
+    {
+        $hearings = $this->getHearings($changedAfter);
+        foreach ($hearings as &$hearing) {
+            $files = $this->getFiles($hearing, $changedAfter);
+            $hearing->setChildren($files);
+        }
+
+        return $hearings;
+    }
+
+    /**
+     * @param mixed $hearingItemId
+     *
+     * @return Item[]
+     */
+    public function getHearingOverviewFiles($hearingItemId)
+    {
+        $hearing = $this->getHearing($hearingItemId);
+        if (null !== $hearing) {
+            $files = $this->getFiles($hearing);
+            $hearing->setChildren($files);
+        }
+
+        return $hearing;
+    }
+
+    /**
+     * @param null|\DateTime $changedAfter
+     *
+     * @return Item[]
+     */
     public function getHearings(\DateTime $changedAfter = null)
     {
         $itemId = $this->configuration['root_id'];
