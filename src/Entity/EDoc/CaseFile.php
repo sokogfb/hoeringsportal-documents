@@ -52,6 +52,11 @@ class CaseFile
      */
     private $shareFileItemId;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $shareFileItemStreamId;
+
     public function getId(): ?string
     {
         return $this->id;
@@ -101,6 +106,18 @@ class CaseFile
     public function setShareFileItemId(string $shareFileItemId): self
     {
         $this->shareFileItemId = $shareFileItemId;
+
+        return $this;
+    }
+
+    public function getShareFileItemStreamId(): ?string
+    {
+        return $this->shareFileItemStreamId;
+    }
+
+    public function setShareFileItemStreamId(string $shareFileItemStreamId): self
+    {
+        $this->shareFileItemStreamId = $shareFileItemStreamId;
 
         return $this;
     }

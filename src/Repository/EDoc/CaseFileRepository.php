@@ -33,22 +33,23 @@ class CaseFileRepository extends ServiceEntityRepository
     public function created(EDocCaseFile $caseFile, Item $item, Archiver $archiver)
     {
         $caseFileIdentifier = $caseFile->CaseFileIdentifier;
-        $shareFileItemId = $item->id;
+        $shareFileItemStreamId = $item->streamId;
 
         $entity = $this->findOneBy([
             'caseFileIdentifier' => $caseFileIdentifier,
-            'shareFileItemId' => $shareFileItemId,
+            'shareFileItemStreamId' => $shareFileItemStreamId,
             'archiver' => $archiver,
         ]);
 
         if (null === $entity) {
             $entity = (new CaseFile())
                 ->setCaseFileIdentifier($caseFileIdentifier)
-                ->setShareFileItemId($shareFileItemId)
+                ->setShareFileItemStreamId($shareFileItemStreamId)
                 ->setArchiver($archiver);
         }
 
         $entity
+            ->setShareFileItemId($item->id)
             ->setData([
                 'sharefile' => $item->getData(),
                 'edoc' => $caseFile->getData(),

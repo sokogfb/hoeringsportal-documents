@@ -76,7 +76,7 @@ class EdocService
     public function getDocument(CaseFile $case, Item $item)
     {
         $document = $this->documentRepository->findOneBy([
-            'shareFileItemId' => $item->id,
+            'shareFileItemStreamId' => $item->streamId,
             'archiver' => $this->archiver,
         ]);
 
@@ -127,9 +127,10 @@ class EdocService
     public function getHearing(Item $item, bool $create = false, array $data = [])
     {
         $caseFile = $this->caseFileRepository->findOneBy([
-            'shareFileItemId' => $item->id,
+            'shareFileItemStreamId' => $item->streamId,
             'archiver' => $this->archiver,
         ]);
+
         $hearing = $caseFile ? $this->getCaseById($caseFile->getCaseFileIdentifier()) : null;
         if (null !== $hearing || !$create) {
             // @TODO Update hearing?
@@ -187,7 +188,7 @@ class EdocService
 //        }
 
         $document = $this->documentRepository->findOneBy([
-            'shareFileItemId' => $item->id,
+            'shareFileItemStreamId' => $item->streamId,
             'archiver' => $this->archiver,
         ]);
 
