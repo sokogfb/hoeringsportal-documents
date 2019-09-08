@@ -58,8 +58,9 @@ process running, e.g.:
 
 ```
 # /etc/supervisor/conf.d/symfony_hoeringsportal_documents.conf
+# @see https://symfony.com/doc/current/messenger.html#deploying-to-production
 [program:symfony_hoeringsportal_documents]
-command = /data/www/hoeringsportal-documents/htdocs/bin/console messenger:consume amqp
+command = /data/www/hoeringsportal-documents/htdocs/bin/console messenger:consume --limit=10 amqp
 environment=APP_ENV=prod
 numprocs = 1
 autostart = true
