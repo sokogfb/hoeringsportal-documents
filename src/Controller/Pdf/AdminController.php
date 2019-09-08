@@ -87,6 +87,8 @@ class AdminController extends EasyAdminController
      *
      * @param mixed $hearing
      * @param mixed $id
+     *
+     * @return Response
      */
     public function progress($hearing, $id)
     {
@@ -101,6 +103,8 @@ class AdminController extends EasyAdminController
      *
      * @param mixed $hearing
      * @param mixed $id
+     *
+     * @return JsonResponse
      */
     public function status($hearing, $id, PdfHelper $helper)
     {

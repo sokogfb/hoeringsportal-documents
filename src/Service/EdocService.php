@@ -8,6 +8,16 @@
  * This source file is subject to the MIT license.
  */
 
+/** @noinspection DuplicatedCode */
+
+/*
+ * This file is part of hoeringsportal-sync-files.
+ *
+ * (c) 2018–2019 ITK Development
+ *
+ * This source file is subject to the MIT license.
+ */
+
 namespace App\Service;
 
 use App\Entity\Archiver;
@@ -142,8 +152,10 @@ class EdocService
     /**
      * Create a hearing.
      *
-     * @param string $name the hearing name
-     * @param array  $data additional data for new hearing
+     * @param Item  $item
+     * @param array $data additional data for new hearing
+     *
+     * @throws \ItkDev\Edoc\Util\EdocException
      *
      * @return CaseFile
      */
@@ -213,8 +225,11 @@ class EdocService
     /**
      * Create a hearing response.
      *
-     * @param string $item the response name
-     * @param array  $data data for new response
+     * @param CaseFile $hearing
+     * @param Item     $item    the response name
+     * @param array    $data    data for new response
+     *
+     * @throws \ItkDev\Edoc\Util\EdocException
      *
      * @return Document
      */

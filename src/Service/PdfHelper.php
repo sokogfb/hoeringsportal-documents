@@ -290,7 +290,11 @@ class PdfHelper
     /**
      * Download files from ShareFile.
      *
-     * @param array $items
+     * @param array $data
+     *
+     * @throws \Exception
+     *
+     * @return null|string
      */
     private function downloadFiles(array $data)
     {
@@ -343,6 +347,8 @@ class PdfHelper
                 'An error occurred while creating your directory at '.$exception->getPath()
             );
         }
+
+        return null;
     }
 
     private function getDataDirectory($path = null)

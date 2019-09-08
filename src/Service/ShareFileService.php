@@ -234,6 +234,8 @@ class ShareFileService
      *
      * @param $item
      * @param string $name
+     *
+     * @return null|mixed
      */
     public function getMetadataValue($item, string $name)
     {
@@ -436,6 +438,8 @@ class ShareFileService
 //    }
 
     /**
+     * @throws \Exception
+     *
      * @return Client
      */
     private function client()
