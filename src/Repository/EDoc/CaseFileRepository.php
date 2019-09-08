@@ -30,6 +30,14 @@ class CaseFileRepository extends ServiceEntityRepository
         parent::__construct($registry, CaseFile::class);
     }
 
+    public function findOneByItemAndArchiver(Item $item, Archiver $archiver)
+    {
+        return $this->findOneBy([
+            'shareFileItemStreamId' => $item->streamId,
+            'archiver' => $archiver,
+        ]);
+    }
+
     public function created(EDocCaseFile $caseFile, Item $item, Archiver $archiver)
     {
         $caseFileIdentifier = $caseFile->CaseFileIdentifier;

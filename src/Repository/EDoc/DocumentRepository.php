@@ -30,6 +30,22 @@ class DocumentRepository extends ServiceEntityRepository
         parent::__construct($registry, Document::class);
     }
 
+    public function findOneByItemAndArchiver(Item $item, Archiver $archiver)
+    {
+        return $this->findOneBy([
+            'shareFileItemStreamId' => $item->streamId,
+            'archiver' => $archiver,
+        ]);
+    }
+
+    public function findOneByDocumentAndArchiver(EDocDocument $document, Archiver $archiver)
+    {
+        return $this->findOneBy([
+            'documentIdentifier' => $document->DocumentIdentifier,
+            'archiver' => $archiver,
+        ]);
+    }
+
     public function created(EDocDocument $document, Item $item, Archiver $archiver)
     {
         $documentIdentifier = $document->DocumentIdentifier;

@@ -27,23 +27,6 @@ class ArchiverRepository extends ServiceEntityRepository
         parent::__construct($registry, Archiver::class);
     }
 
-    // /**
-    //  * @return Archiver[] Returns an array of Archiver objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('s')
-            ->andWhere('s.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('s.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
-
     public function findOneByNameOrId($value): ?Archiver
     {
         return $this->createQueryBuilder('s')
