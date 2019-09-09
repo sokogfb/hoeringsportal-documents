@@ -129,6 +129,8 @@ easy_admin:
             disabled_actions: ['new', 'edit', 'delete']
 
             list:
+                dql_filter: "entity.shareFileItemStreamId <> ''"
+
                 form_filters:
                     # - archiver
 
@@ -159,6 +161,8 @@ easy_admin:
             disabled_actions: ['new', 'edit', 'delete']
 
             list:
+                dql_filter: "entity.shareFileItemStreamId <> ''"
+
                 form_filters:
                     # - archiver
 

@@ -30,25 +30,42 @@ class DocumentRepository extends ServiceEntityRepository
         parent::__construct($registry, Document::class);
     }
 
+    public function findOneByItemAndArchiver(Item $item, Archiver $archiver)
+    {
+        return $this->findOneBy([
+            'shareFileItemStreamId' => $item->streamId,
+            'archiver' => $archiver,
+        ]);
+    }
+
+    public function findOneByDocumentAndArchiver(EDocDocument $document, Archiver $archiver)
+    {
+        return $this->findOneBy([
+            'documentIdentifier' => $document->DocumentIdentifier,
+            'archiver' => $archiver,
+        ]);
+    }
+
     public function created(EDocDocument $document, Item $item, Archiver $archiver)
     {
         $documentIdentifier = $document->DocumentIdentifier;
-        $shareFileItemId = $item->id;
+        $shareFileItemStreamId = $item->streamId;
 
         $entity = $this->findOneBy([
             'documentIdentifier' => $documentIdentifier,
-            'shareFileItemId' => $shareFileItemId,
+            'shareFileItemStreamId' => $shareFileItemStreamId,
             'archiver' => $archiver,
         ]);
 
         if (null === $entity) {
             $entity = (new Document())
                 ->setDocumentIdentifier($documentIdentifier)
-                ->setShareFileItemId($shareFileItemId)
+                ->setShareFileItemStreamId($shareFileItemStreamId)
                 ->setArchiver($archiver);
         }
 
         $entity
+            ->setShareFileItemId($item->id)
             ->setData([
                 'sharefile' => $item->getData(),
                 'edoc' => $document->getData(),

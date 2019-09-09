@@ -85,10 +85,7 @@ class EdocService
 
     public function getDocument(CaseFile $case, Item $item)
     {
-        $document = $this->documentRepository->findOneBy([
-            'shareFileItemId' => $item->id,
-            'archiver' => $this->archiver,
-        ]);
+        $document = $this->documentRepository->findOneByItemAndArchiver($item, $this->archiver);
 
         return $document ? $this->getDocumentById($document->getDocumentIdentifier()) : null;
     }
@@ -136,10 +133,8 @@ class EdocService
      */
     public function getHearing(Item $item, bool $create = false, array $data = [])
     {
-        $caseFile = $this->caseFileRepository->findOneBy([
-            'shareFileItemId' => $item->id,
-            'archiver' => $this->archiver,
-        ]);
+        $caseFile = $this->caseFileRepository->findOneByItemAndArchiver($item, $this->archiver);
+
         $hearing = $caseFile ? $this->getCaseById($caseFile->getCaseFileIdentifier()) : null;
         if (null !== $hearing || !$create) {
             // @TODO Update hearing?
@@ -198,10 +193,7 @@ class EdocService
 //            return $document;
 //        }
 
-        $document = $this->documentRepository->findOneBy([
-            'shareFileItemId' => $item->id,
-            'archiver' => $this->archiver,
-        ]);
+        $document = $this->documentRepository->findOneByItemAndArchiver($item, $this->archiver);
 
         $response = $document ? $this->getDocumentById($document->getDocumentIdentifier()) : null;
         if (null !== $response || !$create) {
@@ -214,10 +206,7 @@ class EdocService
 
     public function getDocumentUpdatedAt(Document $document)
     {
-        $document = $this->documentRepository->findOneBy([
-            'documentIdentifier' => $document->DocumentIdentifier,
-            'archiver' => $this->archiver,
-        ]);
+        $document = $this->documentRepository->findOneByDocumentAndArchiver($document, $this->archiver);
 
         return $document ? $document->getUpdatedAt() : null;
     }
