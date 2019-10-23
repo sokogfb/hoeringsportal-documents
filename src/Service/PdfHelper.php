@@ -495,10 +495,6 @@ class PdfHelper
 
     private function getResponseGroups(array $responses)
     {
-        // $responses = array_slice($responses, 16, 1); // ERROR!
-        array_splice($responses, 16, 1); // ERROR!
-        // array_splice($responses, 15);
-
         $groups = [];
         foreach ($responses as $response) {
             $group = $response['_metadata']['ticket_data']['on_behalf'] ?? self::GROUP_DEFAULT;
