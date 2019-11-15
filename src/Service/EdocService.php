@@ -110,11 +110,18 @@ class EdocService
 
     public function updateDocument(Document $document, Item $item, array $data)
     {
+        $this->fixDocumentType($document);
+
         $result = $this->edoc()->createDocumentVersion($document, $data);
 
         $this->documentRepository->updated($document, $item, $this->archiver);
 
         return $result;
+    }
+
+    public function updateDocumentSettings(Document $document, array $data)
+    {
+        $return = $this->edoc()->updateDocument($document, $data);
     }
 
     public function getHearings()
@@ -242,6 +249,8 @@ class EdocService
 
     public function updateResponse(Document $response, Item $item, array $data)
     {
+        $this->fixDocumentType($response);
+
         $result = $this->edoc()->createDocumentVersion($response, $data);
 
         $this->documentRepository->updated($response, $item, $this->archiver);
@@ -375,6 +384,20 @@ class EdocService
         );
 
         return 1 === \count($result) ? reset($result) : null;
+    }
+
+    private function fixDocumentType(Document $document)
+    {
+        if (isset($this->configuration['document']['defaults']['DocumentTypeReference'])) {
+            $defaultDocumentTypeReference = (int) $this->configuration['document']['defaults']['DocumentTypeReference'];
+            $documentTypeReference = (int) $document->getData()['DocumentTypeReference'];
+            if ($defaultDocumentTypeReference !== $documentTypeReference) {
+                // Change document type to match default.
+                $this->updateDocumentSettings($document, [
+                    'DocumentTypeReference' => $defaultDocumentTypeReference,
+                ]);
+            }
+        }
     }
 
     private function getCaseFileName(Item $item)
