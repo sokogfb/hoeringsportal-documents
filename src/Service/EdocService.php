@@ -110,9 +110,11 @@ class EdocService
 
     public function updateDocument(Document $document, Item $item, array $data)
     {
-        $this->fixDocumentType($document);
+        $this->unlockDocument($document);
 
         $result = $this->edoc()->createDocumentVersion($document, $data);
+
+        $this->lockDocument($document);
 
         $this->documentRepository->updated($document, $item, $this->archiver);
 
@@ -249,9 +251,11 @@ class EdocService
 
     public function updateResponse(Document $response, Item $item, array $data)
     {
-        $this->fixDocumentType($response);
+        $this->unlockDocument($response);
 
         $result = $this->edoc()->createDocumentVersion($response, $data);
+
+        $this->lockDocument($document);
 
         $this->documentRepository->updated($response, $item, $this->archiver);
 
@@ -386,18 +390,24 @@ class EdocService
         return 1 === \count($result) ? reset($result) : null;
     }
 
-    private function fixDocumentType(Document $document)
+    /**
+     * Make eDoc document updatable.
+     */
+    private function unlockDocument(Document $document)
     {
-        if (isset($this->configuration['document']['defaults']['DocumentTypeReference'])) {
-            $defaultDocumentTypeReference = (int) $this->configuration['document']['defaults']['DocumentTypeReference'];
-            $documentTypeReference = (int) $document->getData()['DocumentTypeReference'];
-            if ($defaultDocumentTypeReference !== $documentTypeReference) {
-                // Change document type to match default.
-                $this->updateDocumentSettings($document, [
-                    'DocumentTypeReference' => $defaultDocumentTypeReference,
-                ]);
-            }
-        }
+        $this->updateDocumentSettings($document, [
+            'DocumentStatusCode' => 1, // "Kladde"
+            'DocumentTypeReference' => 60005, // "Notat"
+        ]);
+    }
+
+    private function lockDocument(Document $document)
+    {
+        $defaults = $this->configuration['document']['defaults'];
+        $this->updateDocumentSettings($document, [
+            'DocumentStatusCode' => $defaults['DocumentStatusCode'] ?? 6, // "Endelig"
+            'DocumentTypeReference' => $defaults['DocumentTypeReference'] ?? 110, // "Indgående dokument"
+        ]);
     }
 
     private function getCaseFileName(Item $item)
