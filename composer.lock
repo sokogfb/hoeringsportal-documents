@@ -2126,7 +2126,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/itk-dev/edoc-api",
-                "reference": "55238c79478695aee217a3d033380c4607c9d53d"
+                "reference": "686bb7eb57df2421c10cf33f2c4e5f1710220ac5"
             },
             "require": {
                 "ext-curl": "*",
@@ -2166,7 +2166,7 @@
                 }
             ],
             "homepage": "https://github.com/itk-dev/edoc-api",
-            "time": "2019-11-17T14:49:47+00:00"
+            "time": "2019-11-17T16:57:53+00:00"
         },
         {
             "name": "jdorn/sql-formatter",

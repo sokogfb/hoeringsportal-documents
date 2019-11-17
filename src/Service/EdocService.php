@@ -395,19 +395,27 @@ class EdocService
      */
     public function unlockDocument(Document $document)
     {
-        $this->updateDocumentSettings($document, [
-            'DocumentStatusCode' => 1, // "Kladde"
-            'DocumentTypeReference' => 60005, // "Notat"
-        ]);
+        try {
+            // Apparently, settings these properties works as the wind blows …
+            $this->updateDocumentSettings($document, [
+                'DocumentStatusCode' => 1, // "Kladde"
+                'DocumentTypeReference' => 60005, // "Notat"
+            ]);
+        } catch (\Exception $exception) {
+        }
     }
 
     public function lockDocument(Document $document)
     {
-        $defaults = $this->configuration['document']['defaults'];
-        $this->updateDocumentSettings($document, [
-            'DocumentStatusCode' => $defaults['DocumentStatusCode'] ?? 6, // "Endelig"
-            'DocumentTypeReference' => $defaults['DocumentTypeReference'] ?? 110, // "Indgående dokument"
-        ]);
+        try {
+            $defaults = $this->configuration['document']['defaults'];
+            // Apparently, settings these properties works as the wind blows …
+            $this->updateDocumentSettings($document, [
+                'DocumentStatusCode' => $defaults['DocumentStatusCode'] ?? 6, // "Endelig"
+                'DocumentTypeReference' => $defaults['DocumentTypeReference'] ?? 110, // "Indgående dokument"
+            ]);
+        } catch (\Exception $exception) {
+        }
     }
 
     private function getCaseFileName(Item $item)
