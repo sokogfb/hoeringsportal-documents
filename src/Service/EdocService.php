@@ -393,7 +393,7 @@ class EdocService
     /**
      * Make eDoc document updatable.
      */
-    private function unlockDocument(Document $document)
+    public function unlockDocument(Document $document)
     {
         $this->updateDocumentSettings($document, [
             'DocumentStatusCode' => 1, // "Kladde"
@@ -401,7 +401,7 @@ class EdocService
         ]);
     }
 
-    private function lockDocument(Document $document)
+    public function lockDocument(Document $document)
     {
         $defaults = $this->configuration['document']['defaults'];
         $this->updateDocumentSettings($document, [
