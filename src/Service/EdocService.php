@@ -110,11 +110,20 @@ class EdocService
 
     public function updateDocument(Document $document, Item $item, array $data)
     {
+        $this->unlockDocument($document);
+
         $result = $this->edoc()->createDocumentVersion($document, $data);
+
+        $this->lockDocument($document);
 
         $this->documentRepository->updated($document, $item, $this->archiver);
 
         return $result;
+    }
+
+    public function updateDocumentSettings(Document $document, array $data)
+    {
+        $return = $this->edoc()->updateDocument($document, $data);
     }
 
     public function getHearings()
@@ -242,7 +251,11 @@ class EdocService
 
     public function updateResponse(Document $response, Item $item, array $data)
     {
+        $this->unlockDocument($response);
+
         $result = $this->edoc()->createDocumentVersion($response, $data);
+
+        $this->lockDocument($response);
 
         $this->documentRepository->updated($response, $item, $this->archiver);
 
@@ -375,6 +388,34 @@ class EdocService
         );
 
         return 1 === \count($result) ? reset($result) : null;
+    }
+
+    /**
+     * Make eDoc document updatable.
+     */
+    public function unlockDocument(Document $document)
+    {
+        try {
+            // Apparently, settings these properties works as the wind blows …
+            $this->updateDocumentSettings($document, [
+                'DocumentStatusCode' => 1, // "Kladde"
+                'DocumentTypeReference' => 60005, // "Notat"
+            ]);
+        } catch (\Exception $exception) {
+        }
+    }
+
+    public function lockDocument(Document $document)
+    {
+        try {
+            $defaults = $this->configuration['document']['defaults'];
+            // Apparently, settings these properties works as the wind blows …
+            $this->updateDocumentSettings($document, [
+                'DocumentStatusCode' => $defaults['DocumentStatusCode'] ?? 6, // "Endelig"
+                'DocumentTypeReference' => $defaults['DocumentTypeReference'] ?? 110, // "Indgående dokument"
+            ]);
+        } catch (\Exception $exception) {
+        }
     }
 
     private function getCaseFileName(Item $item)
