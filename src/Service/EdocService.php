@@ -255,7 +255,7 @@ class EdocService
 
         $result = $this->edoc()->createDocumentVersion($response, $data);
 
-        $this->lockDocument($document);
+        $this->lockDocument($response);
 
         $this->documentRepository->updated($response, $item, $this->archiver);
 
