@@ -214,7 +214,13 @@ class PdfHelper
         $this->debug('Downloading pdf files');
         $dirname = $this->downloadFiles($data);
         $this->debug('Combining pdf files');
+
+        // Disable the garbage collector to prevent "feof(): supplied resource
+        // is not a valid stream resource" errors.
+        gc_disable();
         $filename = $this->combineFiles($data, $dirname);
+        gc_enable();
+        gc_collect_cycles();
 
         return $filename;
     }
