@@ -20,6 +20,8 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class ArchiverListCommand extends Command
 {
+    protected $archiverType = 'sharefile2edoc';
+
     /** @var ArchiverRepository */
     private $repository;
 
@@ -80,11 +82,11 @@ class ArchiverListCommand extends Command
                     $first = false;
                 }
 
-                $table->addRow($values);
+                $table->addRow(array_map(function ($value) {
+                    return is_scalar($value) ? $value : json_encode($value);
+                }, $values));
             }
             $table->render();
         }
-//        header('Content-type: text/plain'); echo var_export($archivers, true); die(__FILE__.':'.__LINE__.':'.__METHOD__);
-//        header('Content-type: text/plain'); echo var_export($types, true); die(__FILE__.':'.__LINE__.':'.__METHOD__);
     }
 }

@@ -20,6 +20,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ItemListCommand extends Command
 {
+    protected $archiverType = 'sharefile2edoc';
+
     /** @var EdocService */
     private $edoc;
 
