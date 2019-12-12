@@ -113,9 +113,6 @@
     "egulias/email-validator": {
         "version": "2.1.6"
     },
-    "facebook/webdriver": {
-        "version": "1.6.0"
-    },
     "fig/link-util": {
         "version": "1.0.0"
     },
@@ -205,6 +202,9 @@
     },
     "pagerfanta/pagerfanta": {
         "version": "v2.0.1"
+    },
+    "php": {
+        "version": "7.3"
     },
     "php-cs-fixer/diff": {
         "version": "v1.3.0"
@@ -403,9 +403,6 @@
     },
     "symfony/orm-pack": {
         "version": "v1.0.5"
-    },
-    "symfony/panther": {
-        "version": "v0.2.0"
     },
     "symfony/phpunit-bridge": {
         "version": "4.1",
