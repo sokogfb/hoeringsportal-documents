@@ -1,0 +1,69 @@
+{% extends '@EasyAdmin/default/layout.html.twig' %}
+
+{% block content_title %}
+    {{ 'eDoc item list'| trans }}
+{% endblock %}
+
+{% macro render_value(value) %}
+    {% import _self as self %}
+    {% if value is iterable %}
+        {#
+            @TODO: Handle numeric arrays
+            value|keys == range(0, value|length-1)
+            #}
+        <dl class="edoc-item-list-values">
+            {% for key, val in value %}
+                <dt>{{ key }}</dt>
+                <dd>{{ self.render_value(val) }}</dd>
+            {% endfor %}
+        </dl>
+    {% else %}
+        {{ value }}
+    {% endif %}
+{% endmacro %}
+
+{% block main %}
+    {% import _self as self %}
+
+    {% form_theme form 'bootstrap_4_layout.html.twig' %}
+    {{ form_start(form, {'attr': {'class': 'form-inline'}}) }}
+        {{ form_label(form.type) }}
+        {{ form_widget(form.type, {'attr': {'class': 'form-control ml-2 mr-2'}}) }}
+
+        {{ form_label(form.archiver) }}
+        {{ form_widget(form.archiver, {'attr': {'class': 'form-control ml-2 mr-2'}}) }}
+
+        {{ form_widget(form.submit) }}
+    {{ form_end(form) }}
+
+    {% if items %}
+        <table class="table datagrid edoc-item-list">
+            {% for item in items %}
+                {% if loop.first %}
+                    <thead>
+                        <tr>
+                            {% for key, value in item %}
+                                <th><span>{{ key }}</span></th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                {% endif %}
+
+                <tr>
+                    {% for key, value in item %}
+                        <td>
+                            {{ self.render_value(value) }}
+                        </td>
+                    {% endfor %}
+                </tr>
+
+                {% if loop.last %}
+                    </tbody>
+                {% endif %}
+            {% endfor %}
+        </table>
+    {% else %}
+            <div class="alert alert-info">{{ 'No items found'|trans }}</div>
+    {% endif %}
+{% endblock %}
