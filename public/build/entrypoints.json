@@ -2,8 +2,8 @@
   "entrypoints": {
     "easy_admin": {
       "js": [
-        "/build/runtime.be789d2f.js",
-        "/build/easy_admin.dcc857e7.js"
+        "/build/runtime.e9dea5e6.js",
+        "/build/easy_admin.2ad01997.js"
       ],
       "css": [
         "/build/easy_admin.cf30185c.css"
