@@ -443,16 +443,8 @@ class PdfHelper
                         ]);
                     }
                     if (1 === $p) {
-                        $title = $response->getName() ?? $response->getId();
-
-                        if (isset($response['_metadata']['user_data']['name'])) {
-                            $title = $response['_metadata']['user_data']['name'];
-
-                            if ($this->isOrganizationResponse($response)) {
-                                $title .= ' (på vegne af '.$response['_metadata']['ticket_data']['on_behalf_organization'].')';
-                            }
-                        }
-
+                        $title = $this->getTitle($response) ?? $response->getName() ?? $response->getId();
+                        $title .= ' – '.$this->getHearingReplyId($response);
                         $mpdf->TOC_Entry($title, 1);
                     }
 
@@ -471,6 +463,22 @@ class PdfHelper
     private function getTOCName($name)
     {
         return base64_encode($name);
+    }
+
+    private function getTitle($response)
+    {
+        if (!isset($response['_metadata']['user_data']['name'])) {
+            return null;
+        }
+
+        return $this->isOrganizationResponse($response)
+            ? $response['_metadata']['ticket_data']['on_behalf_organization'].' (v. '.$response['_metadata']['user_data']['name'].')'
+            : $response['_metadata']['user_data']['name'];
+    }
+
+    private function getHearingReplyId($response)
+    {
+        return $response['_metadata']['ticket_data']['ref'] ?? null;
     }
 
     /**
@@ -503,7 +511,7 @@ class PdfHelper
             $groups[$group][] = $response;
         }
 
-        // Sort groups.
+        // Sort responses in groups.
         $compareItemsByPersonName = function (array $a, array $b) {
             return strcasecmp(
                 $a['_metadata']['user_data']['name'] ?? '',
@@ -512,7 +520,9 @@ class PdfHelper
         };
 
         foreach ($groups as $name => &$responses) {
-            usort($responses, $compareItemsByPersonName);
+            usort($responses, function (array $a, array $b) {
+                return strcasecmp($this->getTitle($a), $this->getTitle($b));
+            });
         }
 
         // Sort groups by name and make sure that "Privatperson" comes last.
