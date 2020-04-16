@@ -296,8 +296,6 @@ class PdfHelper
     /**
      * Download files from ShareFile.
      *
-     * @param array $data
-     *
      * @throws \Exception
      *
      * @return null|string
@@ -477,8 +475,6 @@ class PdfHelper
 
     /**
      * Get responses indexed by item id.
-     *
-     * @param Item $hearing
      *
      * @return array|false
      */

@@ -98,8 +98,6 @@ class ShareFileService
     }
 
     /**
-     * @param null|\DateTime $changedAfter
-     *
      * @return Item[]
      */
     public function getHearings(\DateTime $changedAfter = null)
@@ -150,9 +148,6 @@ class ShareFileService
     }
 
     /**
-     * @param Item           $hearing
-     * @param null|\DateTime $changedAfter
-     *
      * @return Item[]
      */
     public function getResponses(Item $hearing, \DateTime $changedAfter = null)
@@ -189,7 +184,6 @@ class ShareFileService
      * Get metadata list.
      *
      * @param $item
-     * @param null|array $names
      *
      * @return array
      */
@@ -216,7 +210,6 @@ class ShareFileService
      * Get all metadata values.
      *
      * @param $item
-     * @param array $names
      *
      * @return array
      */
@@ -233,7 +226,6 @@ class ShareFileService
      * Get a single metadata value.
      *
      * @param $item
-     * @param string $name
      *
      * @return null|mixed
      */
@@ -301,8 +293,7 @@ class ShareFileService
     }
 
     /**
-     * @param Item[]          $hearings
-     * @param OutputInterface $output
+     * @param Item[] $hearings
      */
     public function dump(array $hearings, OutputInterface $output)
     {
@@ -389,9 +380,6 @@ class ShareFileService
 
     /**
      * Get all children by following "nextlink" in result.
-     *
-     * @param string $itemId
-     * @param array  $query
      *
      * @return array
      */

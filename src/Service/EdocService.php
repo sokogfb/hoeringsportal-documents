@@ -156,7 +156,6 @@ class EdocService
     /**
      * Create a hearing.
      *
-     * @param Item  $item
      * @param array $data additional data for new hearing
      *
      * @throws \ItkDev\Edoc\Util\EdocException
@@ -188,10 +187,9 @@ class EdocService
     /**
      * Get a hearing reponse.
      *
-     * @param CaseFile $hearing
-     * @param string   $item
-     * @param bool     $create  if true, a new response will be created
-     * @param array    $data    additional data for new response
+     * @param string $item
+     * @param bool   $create if true, a new response will be created
+     * @param array  $data   additional data for new response
      *
      * @return Document
      */
@@ -223,9 +221,8 @@ class EdocService
     /**
      * Create a hearing response.
      *
-     * @param CaseFile $hearing
-     * @param Item     $item    the response name
-     * @param array    $data    data for new response
+     * @param Item  $item the response name
+     * @param array $data data for new response
      *
      * @throws \ItkDev\Edoc\Util\EdocException
      *
@@ -265,8 +262,6 @@ class EdocService
     /**
      * Attach a file to a document.
      *
-     * @param Document $document
-     * @param string   $name
      * @param $contents
      */
     public function attachFile(Document $document, string $name, $contents)
@@ -314,8 +309,6 @@ class EdocService
     }
 
     /**
-     * @param array $criteria
-     *
      * @return array|CaseFile[]
      */
     public function getCases(array $criteria = [])

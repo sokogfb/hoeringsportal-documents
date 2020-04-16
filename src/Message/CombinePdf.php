@@ -39,8 +39,6 @@ class CombinePdf
     }
 
     /**
-     * @param string $archiverId
-     *
      * @return CombinePdf
      */
     public function setArchiverId(string $archiverId): self
@@ -50,17 +48,12 @@ class CombinePdf
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getHearingId(): string
     {
         return $this->hearingId;
     }
 
     /**
-     * @param string $hearingId
-     *
      * @return CombinePdf
      */
     public function setHearingId(string $hearingId): self
@@ -70,17 +63,12 @@ class CombinePdf
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getLoggerFilename(): string
     {
         return $this->loggerFilename;
     }
 
     /**
-     * @param string $loggerFilename
-     *
      * @return CombinePdf
      */
     public function setLoggerFilename(string $loggerFilename): self

@@ -23,8 +23,6 @@ trait ArchiverAwareTrait
 
     /**
      * Sets the archiver.
-     *
-     * @param Archiver $archiver
      */
     public function setArchiver(Archiver $archiver)
     {
